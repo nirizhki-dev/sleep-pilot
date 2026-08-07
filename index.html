@@ -1,0 +1,962 @@
+<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>שינה — פיילוט</title>
+<style>
+  :root[data-sky="day"] {
+    color-scheme: light;
+    --bg-top: #cfe4f7; --bg-bottom: #eef4fa;
+    --card: #ffffff; --card-2: #f0f4f9;
+    --ink: #171927; --ink-2: #4e5468; --muted: #8a90a3;
+    --hair: rgba(23,25,39,0.08);
+    --accent: #6558e8; --accent-deep: #5b4ee0; --accent-soft: rgba(101,88,232,0.10);
+    --coral: #f2704d;
+    --good: #12996b; --good-soft: rgba(18,153,107,0.10);
+    --ring-track: rgba(23,25,39,0.08);
+    --nav-bg: rgba(255,255,255,0.85);
+    --shadow: 0 6px 24px rgba(23,25,39,0.10);
+  }
+  :root, :root[data-sky="night"] {
+    color-scheme: dark;
+    --bg-top: #101b30; --bg-bottom: #07080d;
+    --card: #1a1d26; --card-2: #21242f;
+    --ink: #f1f2f7; --ink-2: #b9bdcc; --muted: #868da0;
+    --hair: rgba(255,255,255,0.07);
+    --accent: #8b7ff5; --accent-deep: #5b4ee0; --accent-soft: rgba(139,127,245,0.16);
+    --coral: #ff8a66;
+    --good: #3ecf9a; --good-soft: rgba(62,207,154,0.14);
+    --ring-track: rgba(255,255,255,0.09);
+    --nav-bg: rgba(30,32,42,0.82);
+    --shadow: 0 8px 28px rgba(0,0,0,0.35);
+  }
+  :root[data-sky="day"] { color-scheme: light; }
+  :root[data-sky="day"] .greet, :root[data-sky="day"] .hdate { text-shadow: 0 1px 8px rgba(255,255,255,0.55); }
+  .greet, .hdate { text-shadow: 0 1px 10px rgba(7,9,16,0.45); }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: var(--ink); direction: rtl;
+    background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 520px) fixed;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.45;
+  }
+  #sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .wrap { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; padding: 22px 16px 118px; display: flex; flex-direction: column; gap: 13px; }
+
+  header { display: flex; align-items: center; gap: 12px; padding: 2px 4px 4px; }
+  header .avatar {
+    width: 42px; height: 42px; border-radius: 50%; flex: none; border: none; cursor: pointer; font: inherit; font-size: 1.15rem;
+    background: radial-gradient(circle at 34% 30%, #b3a7ff, var(--accent-deep));
+    display: flex; align-items: center; justify-content: center;
+  }
+  .greet { font-size: 1.3rem; font-weight: 760; letter-spacing: -0.015em; }
+  .hdate { font-size: 0.78rem; color: var(--muted); }
+  .pilot-tag { font-size: 0.68rem; color: var(--accent); background: var(--accent-soft); border-radius: 99px; padding: 2px 10px; margin-inline-start: auto; }
+
+  .card { background: var(--card); border-radius: 28px; padding: 20px 22px; box-shadow: var(--shadow); }
+  .card > h2 { font-size: 0.93rem; font-weight: 700; margin: 0 0 2px; }
+  .card > .sub { font-size: 0.77rem; color: var(--muted); margin: 0 0 13px; }
+
+  .bento { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+  .moon-tile {
+    grid-row: span 2; border-radius: 28px; padding: 20px; cursor: pointer; border: none; text-align: right;
+    display: flex; flex-direction: column; justify-content: space-between; min-height: 240px;
+    color: #fff; font: inherit; position: relative; overflow: hidden;
+    background:
+      radial-gradient(1.3px 1.3px at 18% 22%, rgba(255,255,255,0.9) 50%, transparent 51%),
+      radial-gradient(1px 1px at 70% 12%, rgba(255,255,255,0.7) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 82% 40%, rgba(255,255,255,0.8) 50%, transparent 51%),
+      linear-gradient(160deg, #4f42d8 0%, #6f5ff0 55%, #8b7ff5 100%);
+    box-shadow: var(--shadow);
+  }
+  .moon-tile .moon {
+    position: absolute; top: 26px; left: 22px; width: 74px; height: 74px; border-radius: 50%;
+    background: radial-gradient(circle at 62% 38%, #fff, #d9d2ff 70%);
+    box-shadow: 0 0 34px rgba(255,255,255,0.45);
+  }
+  .moon-tile .moon::after {
+    content: ""; position: absolute; top: -8px; left: -14px; width: 74px; height: 74px; border-radius: 50%;
+    background: #5b4ee0;
+  }
+  .moon-tile.day {
+    background:
+      radial-gradient(1.5px 1.5px at 20% 65%, rgba(255,255,255,0.85) 50%, transparent 51%),
+      linear-gradient(160deg, #3f97e6 0%, #6fb6ef 55%, #ffd98a 115%);
+  }
+  .moon-tile.day .moon { background: radial-gradient(circle at 40% 35%, #fff8d8, #ffd767 70%); box-shadow: 0 0 42px rgba(255,214,110,0.8); }
+  .moon-tile.day .moon::after { display: none; }
+  .moon-tile .eyebrow { font-size: 0.7rem; letter-spacing: 0.1em; opacity: 0.85; font-weight: 600; }
+  .moon-tile .ititle { font-size: 1.18rem; font-weight: 760; margin-top: 6px; display: block; }
+  .moon-tile .cta { font-size: 0.78rem; opacity: 0.9; margin-top: 10px; display: block; }
+
+  .mini { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 16px 14px; cursor: pointer; border: none; font: inherit; color: var(--ink); }
+  .mini .big { font-size: 1.85rem; font-weight: 790; font-variant-numeric: tabular-nums; line-height: 1.05; }
+  .mini .cap { font-size: 0.72rem; color: var(--muted); text-align: center; }
+  .mini .flame { color: var(--coral); }
+  .ringbox { position: relative; width: 96px; height: 96px; }
+  .ringbox svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ringbox .center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .ringbox .pct { font-size: 1.25rem; font-weight: 780; font-variant-numeric: tabular-nums; }
+
+  .affirm-card {
+    border-radius: 28px; padding: 30px 26px; cursor: pointer; text-align: center; position: relative;
+    background: radial-gradient(120% 140% at 50% 0%, rgba(139,127,245,0.22), transparent 60%), var(--card);
+    box-shadow: var(--shadow); border: none; width: 100%; font: inherit; color: var(--ink);
+  }
+  .affirm-card .eyebrow { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--muted); font-weight: 600; }
+  .affirm-text { font-size: 1.45rem; font-weight: 340; line-height: 1.5; margin: 14px 0 10px; text-wrap: balance; }
+  .affirm-sub { font-size: 0.76rem; color: var(--muted); }
+  .affirm-add { position: absolute; top: 14px; left: 16px; font-size: 0.74rem; color: var(--muted); background: none; border: none; cursor: pointer; }
+
+  .sigs { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 9px; }
+  .sig {
+    font: inherit; font-size: 0.83rem; font-weight: 600; cursor: pointer; text-align: right;
+    display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-radius: 18px;
+    border: 1px solid var(--hair); background: var(--card-2); color: var(--ink-2);
+  }
+  .sig .se { font-size: 1.15rem; }
+  .sig .sl { flex: 1; line-height: 1.25; }
+  .sig .sk { font-size: 0.72rem; color: var(--coral); white-space: nowrap; }
+  .sig.on { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
+
+  .find { display: flex; align-items: baseline; gap: 10px; padding: 10px 0; border-top: 1px solid var(--hair); font-size: 0.9rem; }
+  .find:first-of-type { border-top: none; }
+  .find .fe { font-size: 1.05rem; }
+  .find .fd { flex: 1; }
+  .find .fd small { display: block; color: var(--muted); font-size: 0.72rem; }
+  .find .fv { font-weight: 780; white-space: nowrap; }
+  .find .fv.up { color: var(--good); }
+  .find .fv.down { color: var(--coral); }
+
+  .level-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .level-name { font-size: 1.2rem; font-weight: 780; }
+  .level-pts { font-size: 0.8rem; color: var(--muted); }
+  .xpbar { height: 10px; border-radius: 999px; background: var(--ring-track); margin: 10px 0 4px; overflow: hidden; }
+  .xpbar > div { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent-deep), var(--accent)); transition: width 0.6s ease; }
+  @media (prefers-reduced-motion: reduce) { .xpbar > div { transition: none; } }
+  .xpnext { font-size: 0.73rem; color: var(--muted); margin-bottom: 12px; }
+  .badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 10px; }
+  .bdg { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 10px 4px; border-radius: 18px; background: var(--card-2); border: none; cursor: pointer; font: inherit; }
+  .bdg .e { font-size: 1.5rem; filter: grayscale(1); opacity: 0.35; }
+  .bdg .n { font-size: 0.66rem; color: var(--muted); line-height: 1.2; }
+  .bdg.won { background: var(--accent-soft); }
+  .bdg.won .e { filter: none; opacity: 1; }
+  .bdg.won .n { color: var(--ink-2); font-weight: 650; }
+
+  .pill { font: inherit; font-size: 0.85rem; padding: 9px 18px; border-radius: 999px; cursor: pointer; border: none; background: var(--accent-soft); color: var(--accent); font-weight: 650; }
+  .pill.solid { background: linear-gradient(135deg, var(--accent-deep), var(--accent)); color: #fff; }
+  .pill.done { background: var(--good-soft); color: var(--good); }
+  .ghost { font: inherit; font-size: 0.76rem; background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px 6px; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .rate { display: none; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .rate.open { display: flex; }
+  .rate .q { font-size: 0.78rem; color: var(--ink-2); }
+  .rate button { font: inherit; width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; background: var(--card-2); color: var(--ink); font-weight: 700; }
+  .rate button:hover { background: var(--accent); color: #fff; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .thanks { font-size: 0.8rem; color: var(--good); }
+  .err { font-size: 0.8rem; color: var(--coral); }
+
+  .habit { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-top: 1px solid var(--hair); flex-wrap: wrap; }
+  .habit:first-of-type { border-top: none; }
+  .habit .glyph { width: 46px; height: 46px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; background: var(--accent-soft); font-size: 1.15rem; border: none; cursor: pointer; font-family: inherit; }
+  .habit .info { flex: 1; min-width: 140px; }
+  .habit .hname { font-weight: 700; font-size: 0.94rem; }
+  .habit .hplan { font-size: 0.75rem; color: var(--muted); }
+  .habit .meta { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .habit .streak { font-size: 0.76rem; color: var(--ink-2); }
+  .dots { display: flex; gap: 3.5px; direction: ltr; }
+  .dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--ring-track); }
+  .dots span.on { background: var(--accent); }
+
+  .chartbox { direction: ltr; position: relative; margin-top: 4px; }
+  svg.chart { display: block; width: 100%; height: auto; }
+  .tooltip { position: absolute; pointer-events: none; background: var(--card-2); border: 1px solid var(--hair); border-radius: 12px; padding: 6px 10px; font-size: 0.75rem; box-shadow: var(--shadow); white-space: nowrap; display: none; direction: rtl; color: var(--ink); z-index: 2; }
+  table.data { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 8px; }
+  table.data th, table.data td { text-align: right; padding: 6px 8px; border-top: 1px solid var(--hair); }
+  table.data th { color: var(--muted); font-weight: 600; border-top: none; }
+
+  details.idea { border-top: 1px solid var(--hair); }
+  details.idea:first-of-type { border-top: none; }
+  details.idea summary { list-style: none; display: flex; align-items: center; gap: 10px; padding: 13px 2px; cursor: pointer; }
+  details.idea summary::-webkit-details-marker { display: none; }
+  .idea .ititle2 { flex: 1; font-weight: 650; font-size: 0.92rem; }
+  .badge { font-size: 0.72rem; padding: 3px 11px; border-radius: 999px; white-space: nowrap; background: var(--card-2); color: var(--ink-2); }
+  .badge.proven { background: var(--good-soft); color: var(--good); font-weight: 700; }
+  .badge.new { background: var(--accent-soft); color: var(--accent); }
+  .chev { color: var(--muted); transition: transform 0.15s; font-size: 0.65rem; }
+  details[open] .chev { transform: rotate(90deg); }
+  .idea .body { padding: 0 2px 14px; }
+  .idea .how { font-size: 0.88rem; margin: 0 0 4px; }
+  .idea .why { font-size: 0.79rem; color: var(--ink-2); margin: 0 0 4px; }
+  .idea .src { font-size: 0.72rem; color: var(--muted); margin: 0 0 10px; }
+  .addidea { display: grid; gap: 8px; }
+  .addidea input { font: inherit; padding: 11px 15px; border: none; border-radius: 16px; background: var(--card-2); color: var(--ink); }
+
+  #sheet { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
+  #sheet[hidden] { display: none; }
+  #sheet .backdrop { position: absolute; inset: 0; background: rgba(5,6,10,0.62); backdrop-filter: blur(6px); }
+  #sheet .panel { position: relative; width: 100%; max-width: 560px; max-height: 86vh; overflow-y: auto; background: var(--card); border-radius: 30px 30px 0 0; padding: 14px 24px 34px; direction: rtl; }
+  #sheet .grip { width: 44px; height: 5px; border-radius: 99px; background: var(--ring-track); margin: 0 auto 14px; }
+  #sheet .close { position: absolute; top: 16px; left: 16px; width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--card-2); color: var(--ink-2); cursor: pointer; }
+  .sh-head { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .sh-emoji { font-size: 2.4rem; line-height: 1; }
+  .sh-title { font-size: 1.3rem; font-weight: 780; }
+  .sh-status { font-size: 0.8rem; color: var(--muted); }
+  .sh-status.won { color: var(--good); font-weight: 650; }
+  .sh-deep { font-size: 0.92rem; color: var(--ink-2); margin: 12px 0; }
+  .sh-sec { font-size: 0.78rem; font-weight: 700; color: var(--muted); letter-spacing: 0.06em; margin: 18px 0 8px; }
+  .sh-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hair); font-size: 0.88rem; }
+  .sh-row:first-of-type { border-top: none; }
+  .emgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; margin: 8px 0; }
+  .emgrid button { font-size: 1.35rem; padding: 8px 0; border-radius: 14px; border: none; cursor: pointer; background: var(--card-2); }
+  .emgrid button:hover, .emgrid button.sel { background: var(--accent-soft); outline: 2px solid var(--accent); }
+  .statgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 10px; }
+  .statgrid .st { background: var(--card-2); border-radius: 18px; padding: 12px 14px; }
+  .statgrid .sv { font-size: 1.35rem; font-weight: 780; }
+  .statgrid .sl { font-size: 0.7rem; color: var(--muted); }
+
+  #toast { position: fixed; bottom: 92px; left: 50%; transform: translateX(-50%); background: var(--card-2); color: var(--ink); border: 1px solid var(--hair); padding: 11px 20px; border-radius: 999px; font-size: 0.9rem; font-weight: 650; box-shadow: 0 10px 30px rgba(0,0,0,0.35); opacity: 0; pointer-events: none; z-index: 9; transition: opacity 0.25s; max-width: 88vw; text-align: center; direction: rtl; }
+  #toast.show { opacity: 1; }
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 8; }
+
+  nav.float { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; gap: 4px; padding: 7px; border-radius: 999px; background: var(--nav-bg); backdrop-filter: blur(18px); box-shadow: 0 10px 30px rgba(0,0,0,0.35); border: 1px solid var(--hair); }
+  nav.float button { font: inherit; font-size: 0.68rem; font-weight: 600; cursor: pointer; border: none; background: none; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 15px; border-radius: 999px; }
+  nav.float button.on { background: var(--accent-soft); color: var(--accent); }
+  nav.float svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+</style></head><body>
+
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="wrap" dir="rtl">
+  <header id="top">
+    <button class="avatar" id="avatar" aria-label="החלפת אווטאר">🌙</button>
+    <div>
+      <div class="greet" id="greet"></div>
+      <div class="hdate" id="hdate"></div>
+    </div>
+    <span class="pilot-tag">פיילוט</span>
+  </header>
+
+  <div class="bento">
+    <button class="moon-tile" id="moon-tile" aria-label="הרעיון להערב">
+      <span class="moon" aria-hidden="true"></span>
+      <span class="eyebrow">הרעיון להערב</span>
+      <span>
+        <span class="ititle" id="tonight-title">טוען…</span>
+        <span class="cta">הקש לפרטים ולדירוג ↓</span>
+      </span>
+    </button>
+    <button class="card mini" id="tile-ring" aria-label="פרטי השלמת היום">
+      <div class="ringbox">
+        <svg viewBox="0 0 96 96" aria-hidden="true">
+          <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="var(--accent-deep)"/><stop offset="1" stop-color="var(--accent)"/>
+          </linearGradient></defs>
+          <circle cx="48" cy="48" r="40" fill="none" stroke="var(--ring-track)" stroke-width="9"/>
+          <circle id="ringfg" cx="48" cy="48" r="40" fill="none" stroke="url(#rg)" stroke-width="9" stroke-linecap="round" stroke-dasharray="251.33" stroke-dashoffset="251.33"/>
+        </svg>
+        <div class="center"><span class="pct" id="ringval">0%</span></div>
+      </div>
+      <div class="cap" id="ringcap">הרגלי היום</div>
+    </button>
+    <button class="card mini" id="tile-streak" aria-label="פרטי הרצף">
+      <div class="big flame" id="f-streak">0</div>
+      <div class="cap">ימים ברצף 🔥</div>
+      <div class="cap" id="f-ratings"></div>
+    </button>
+  </div>
+
+  <button class="affirm-card" id="affirm" aria-label="אפירמציית הערב — הקשה למשפט הבא">
+    <span class="affirm-add" id="affirm-add">➕ משפט משלי</span>
+    <span class="eyebrow">המציאות שאני יוצר</span>
+    <div class="affirm-text" id="affirm-text"></div>
+    <span class="affirm-sub">נשימה עמוקה · שרירים רפויים · הקש למשפט הבא</span>
+  </button>
+
+  <section class="card" id="sec-signals">
+    <h2>כפתורי הלילה שלי</h2>
+    <p class="sub">הקשה אחת על מה שקרה הלילה — בלי טפסים. כל כפתור צובר רצף משלו 🔥</p>
+    <div class="sigs" id="sigs"></div>
+  </section>
+
+  <section class="card" id="sec-research">
+    <h2>🔬 המחקר שלי</h2>
+    <p class="sub">המערכת בודקת לבד: אחרי אילו התנהגויות אתה קם רענן יותר?</p>
+    <div id="findings"></div>
+  </section>
+
+  <section class="card" id="tonight-detail" hidden>
+    <h2 id="td-title"></h2>
+    <p class="how" id="td-how" style="font-size:0.9rem;margin:0 0 4px"></p>
+    <p class="why" id="td-why" style="font-size:0.8rem;color:var(--ink-2);margin:0 0 4px"></p>
+    <p class="src" id="td-src" style="font-size:0.72rem;color:var(--muted);margin:0 0 12px"></p>
+    <div class="row">
+      <button class="pill solid tried">ניסיתי — לדרג</button>
+      <div class="rate"><span class="q">כמה זה תרם?</span><span id="td-rate"></span></div>
+      <button class="pill adopt">אמץ כהרגל</button>
+      <span class="thanks"></span>
+    </div>
+  </section>
+
+  <section class="card" id="sec-habits">
+    <h2>ההרגלים שלי</h2>
+    <p class="sub">רעיון שתרם — מאמצים כהרגל. עד שניים במקביל; נשבר רצף? ממשיכים מחר.</p>
+    <div id="habits"></div>
+    <div class="err" id="habiterr"></div>
+  </section>
+
+  <section class="card" id="sec-journey">
+    <h2>המסע שלי</h2>
+    <p class="sub">כל דירוג, סימון וחזרה אחרי נפילה — מקרבים לדרגה הבאה</p>
+    <div class="level-row"><span class="level-name" id="lv-name"></span><span class="level-pts" id="lv-pts"></span></div>
+    <div class="xpbar"><div id="xpfill" style="width:0%"></div></div>
+    <div class="xpnext" id="lv-next"></div>
+    <div class="badges" id="badges"></div>
+  </section>
+
+  <section class="card" id="sec-ideas">
+    <h2>ספריית הרעיונות</h2>
+    <p class="sub">מבוססי מחקר — המקור בכל רעיון. דרגו מה שניסיתם: 1–5 כמה זה תרם לשינה</p>
+    <div id="ideas"></div>
+  </section>
+
+  <section class="card">
+    <h2>הצעת רעיון</h2>
+    <p class="sub">משהו שעבד לך? הוסף — ובסוף הפיילוט זה יגיע אלינו עם הייצוא</p>
+    <div class="addidea">
+      <input id="ntitle" placeholder="הרעיון בכותרת אחת">
+      <input id="nhow" placeholder="איך מיישמים? (משפט)">
+      <button class="pill solid" id="addbtn" style="justify-self:start">הוספה</button>
+    </div>
+  </section>
+
+  <section class="card" id="sec-export">
+    <h2>🧪 משוב הפיילוט</h2>
+    <p class="sub">בסוף תקופת הניסיון: הורידו את קובץ הנתונים ושלחו אותו חזרה למי שהזמין אתכם. הנתונים נשמרים רק במכשיר שלכם עד שתבחרו לשתף.</p>
+    <div class="row">
+      <button class="pill solid" id="exportbtn">⬇ ייצוא קובץ המשוב</button>
+      <span class="sub" id="exportmsg" style="margin:0"></span>
+    </div>
+  </section>
+</div>
+
+<div id="sheet" hidden>
+  <div class="backdrop"></div>
+  <div class="panel" role="dialog" aria-modal="true" aria-label="פרטים">
+    <div class="grip" aria-hidden="true"></div>
+    <button class="close" aria-label="סגירה">✕</button>
+    <div id="sheet-body"></div>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<nav class="float" aria-label="ניווט" dir="rtl">
+  <button data-to="top" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>בית</button>
+  <button data-to="sec-signals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>כפתורים</button>
+  <button data-to="sec-ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 1 4 10.5c-.8.7-1 1.5-1 2.5h-6c0-1-.2-1.8-1-2.5A6 6 0 0 1 12 3z"/></svg>רעיונות</button>
+  <button data-to="sec-export"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>משוב</button>
+</nav>
+
+<script>
+const $ = s => document.querySelector(s);
+let DATA = null;
+
+/* ---- אחסון מקומי במכשיר המשתתף ---- */
+const SEED_IDEAS = [
+  { id: 'light',   title: 'אור יום בשעה הראשונה', how: '10–15 דקות בחוץ אחרי היקיצה, בלי משקפי שמש.', why: 'אור בוקר מכייל את השעון הצירקדי — קשור להירדמות מוקדמת ושינה עמוקה יותר.', source: 'University of Manchester, 2026 (תצפיתי)' },
+  { id: 'phoneout',title: 'הטלפון נטען מחוץ לחדר', how: 'עמדת טעינה קבועה במטבח/סלון; שעון מעורר פשוט ליד המיטה.', why: 'עיצוב סביבה — מסיר את הטריגר המרכזי לדחיינות שינה במקום להילחם בו בכוח רצון.', source: 'הרגלים אטומיים; SLEEP, 2026' },
+  { id: 'ifthen',  title: 'כוונת יישום לערב', how: 'לנסח משפט אחד: "ב-[שעה], אחרי [פעולה קיימת], אני [פעולה קטנה לקראת שינה]".', why: 'ההתערבות עם הראיות הטובות ביותר נגד דחיינות שינה (MCII).', source: 'Psychology & Health, 2020' },
+  { id: 'caffeine',title: 'קפה אחרון עד שש שעות לפני השינה', how: 'ישנים ב-23:00? הקפה האחרון עד 17:00, ועדיף מוקדם יותר.', why: 'קפאין 6 שעות לפני השינה קיצר שינה נמדדת בכשעה בניסוי מבוקר.', source: 'Drake et al., 2013 (מבוקר)' },
+  { id: 'shower',  title: 'מקלחת/אמבטיה חמה בערב', how: 'כשעה-שעתיים לפני השינה, ~10 דקות.', why: 'מטא-אנליזה: מקצרת את זמן ההירדמות — דרך צינון הגוף שאחריה.', source: 'Haghayegh et al., 2019 (מטא-אנליזה)' },
+  { id: 'cool',    title: 'חדר קריר ומאוורר', how: 'לכוון ל-18–20°, לאוורר לפני השינה.', why: 'ירידת טמפרטורת ליבה היא חלק ממנגנון ההירדמות.', source: 'סקירות שינה מרובות (מבוסס)' },
+  { id: 'waketime',title: 'שעת יקיצה קבועה', how: 'אותה שעת קימה כל יום, כולל סופ"ש (סטייה עד שעה).', why: 'עקביות היקיצה מייצבת את השעון הצירקדי יותר משעת ההירדמות.', source: 'המלצות AASM (מבוסס)' },
+  { id: 'winddown',title: 'טקס ערב של 20 דקות בלי מסכים', how: 'ספר, תה, מוזיקה שקטה — משהו שנעים לחכות לו.', why: 'עונה על הצורך בזמן-לעצמי שמניע דחיינות שינה.', source: 'J. Health Psychology, 2026' },
+  { id: 'twomin',  title: 'חוק שתי הדקות', how: 'ההרגל הוא רק "לצחצח שיניים ולהניח את הטלפון" — השאר נגרר.', why: 'מקטין את התלות בכוח רצון מדולדל בסוף היום.', source: 'הרגלים אטומיים; Sleep Med Rev, 2022' },
+  { id: 'nevertwice', title: 'לעולם לא מפספסים פעמיים', how: 'ערב אחד נשבר? בסדר. הכלל היחיד: מחר חוזרים.', why: 'החלקה בודדת לא פוגעת בהרגל — נטישה אחריה כן.', source: 'הרגלים אטומיים (עיקרון יישומי)' },
+];
+const DEFAULT_DATA = { ideas: SEED_IDEAS, feedback: [], hidden: [], habits: [], settings: {}, signals: [] };
+function loadD() {
+  try { const d = JSON.parse(localStorage.getItem('sleep-pilot')); return { ...JSON.parse(JSON.stringify(DEFAULT_DATA)), ...d }; }
+  catch { return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+}
+function saveD(d) { localStorage.setItem('sleep-pilot', JSON.stringify(d)); }
+
+async function api(path, body) {
+  const d = loadD();
+  if (path === '/api/data') return d;
+  if (path === '/api/feedback') {
+    if (!(body.score >= 1 && body.score <= 5)) throw new Error('score');
+    d.feedback.push({ ideaId: body.ideaId, score: body.score, date: new Date().toISOString().slice(0, 10) });
+  } else if (path === '/api/ideas') {
+    d.ideas.push({ id: 'u' + Date.now().toString(36), title: body.title.trim(), how: (body.how || '').trim(), why: '', source: 'הצעה של משתתף פיילוט' });
+  } else if (path === '/api/ideas/hide') {
+    if (!d.hidden.includes(body.id)) d.hidden.push(body.id);
+  } else if (path === '/api/habits') {
+    if (d.habits.filter(h => h.active).length >= 2) throw new Error('שינוי אחד או שניים בכל פעם — שחררו הרגל קיים לפני שמאמצים שלישי.');
+    d.habits.push({ id: 'h' + Date.now().toString(36), name: body.name.trim(), plan: (body.plan || '').trim(), ideaId: body.ideaId || null, createdAt: new Date().toISOString().slice(0, 10), active: true, history: {} });
+  } else if (path === '/api/habits/toggle') {
+    const h = d.habits.find(h => h.id === body.id);
+    if (h.history[body.date]) delete h.history[body.date]; else h.history[body.date] = true;
+  } else if (path === '/api/habits/archive') {
+    const h = d.habits.find(h => h.id === body.id); h.active = false;
+  } else if (path === '/api/habits/update') {
+    const h = d.habits.find(h => h.id === body.id);
+    if (body.name && body.name.trim()) h.name = body.name.trim().slice(0, 80);
+    if (body.plan !== undefined) h.plan = String(body.plan).trim().slice(0, 200);
+    if (body.icon) h.icon = String(body.icon).trim().slice(0, 8);
+  } else if (path === '/api/settings') {
+    d.settings = { ...d.settings, ...body };
+  } else if (path === '/api/signals/toggle') {
+    const i = d.signals.findIndex(s => s.key === body.key && s.date === body.date);
+    let on;
+    if (i >= 0) { d.signals.splice(i, 1); on = false; } else { d.signals.push({ key: body.key, date: body.date }); on = true; }
+    saveD(d); return { ok: true, on };
+  }
+  saveD(d);
+  return { ok: true };
+}
+
+const todayISO = () => new Date().toLocaleDateString('sv-SE');
+const fmt = (n, dd = 1) => n == null ? '—' : n.toFixed(dd).replace(/\.0$/, '');
+function lastNDates(n) {
+  const out = []; const d = new Date(todayISO() + 'T12:00:00');
+  for (let i = n - 1; i >= 0; i--) { const x = new Date(d); x.setDate(x.getDate() - i); out.push(x.toLocaleDateString('sv-SE')); }
+  return out;
+}
+function streak(h) {
+  let s = 0; const d = new Date(todayISO() + 'T12:00:00');
+  if (!h.history[todayISO()]) d.setDate(d.getDate() - 1);
+  for (;;) { const k = d.toLocaleDateString('sv-SE'); if (h.history[k]) { s++; d.setDate(d.getDate() - 1); } else break; }
+  return s;
+}
+function stats(id) {
+  const fb = DATA.feedback.filter(f => f.ideaId === id);
+  return { n: fb.length, avg: fb.length ? fb.reduce((a, b) => a + b.score, 0) / fb.length : null };
+}
+const visibleIdeas = () => DATA.ideas.filter(i => !DATA.hidden.includes(i.id));
+function badge(s) {
+  if (!s.n) return '<span class="badge new">חדש</span>';
+  if (s.n >= 3 && s.avg >= 4) return `<span class="badge proven">★ ${fmt(s.avg)}</span>`;
+  return `<span class="badge">${fmt(s.avg)} · ${s.n}</span>`;
+}
+const rateButtons = () => [1, 2, 3, 4, 5].map(v => `<button data-v="${v}" aria-label="דירוג ${v}">${v}</button>`).join('');
+
+/* ---- תגמולים ---- */
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const vibrate = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch {} };
+let toastTimer = null;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+function confetti(big = false) {
+  if (reduceMotion()) return;
+  const cv = $('#confetti'), ctx = cv.getContext('2d');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const colors = ['#8b7ff5', '#ff8a66', '#3ecf9a', '#f5c84c', '#ffffff'];
+  const N = big ? 120 : 45;
+  const parts = Array.from({ length: N }, (_, i) => ({ x: innerWidth / 2, y: innerHeight * 0.4, vx: Math.cos(i / N * 6.28) * (2 + (i % 5)), vy: Math.sin(i / N * 6.28) * (2 + (i % 4)) - 4, r: 3 + (i % 4), c: colors[i % colors.length], rot: i }));
+  const t0 = performance.now();
+  (function tick(now) {
+    const dt = (now - t0) / (big ? 1400 : 900);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    if (dt >= 1) return;
+    for (const p of parts) { p.x += p.vx; p.y += p.vy; p.vy += 0.18; p.rot += 0.1; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = 1 - dt; ctx.fillStyle = p.c; ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r); ctx.restore(); }
+    requestAnimationFrame(tick);
+  })(t0);
+}
+function longestRun(history) {
+  const days = Object.keys(history).sort();
+  let best = 0, run = 0, prev = null;
+  for (const d of days) { run = (prev && (new Date(d) - new Date(prev)) === 86400000) ? run + 1 : 1; best = Math.max(best, run); prev = d; }
+  return best;
+}
+function hasComeback(history) {
+  for (const d of Object.keys(history)) {
+    const dt = new Date(d + 'T12:00:00');
+    const m1 = new Date(dt); m1.setDate(m1.getDate() - 1);
+    const m2 = new Date(dt); m2.setDate(m2.getDate() - 2);
+    if (!history[m1.toLocaleDateString('sv-SE')] && history[m2.toLocaleDateString('sv-SE')]) return true;
+  }
+  return false;
+}
+const bestRun = () => Math.max(0, ...DATA.habits.map(h => longestRun(h.history)));
+function bestSigRun() {
+  let best = 0; const byKey = {};
+  for (const s of DATA.signals) (byKey[s.key] ||= {})[s.date] = true;
+  for (const h of Object.values(byKey)) best = Math.max(best, longestRun(h));
+  return best;
+}
+function researchRows() {
+  const freshDs = new Set(DATA.signals.filter(s => s.key === 'fresh').map(s => s.date));
+  const allDates = new Set(DATA.signals.map(s => s.date));
+  const rows = [];
+  for (const s of SIGNALS) {
+    if (s.key === 'fresh') continue;
+    const ds = new Set(DATA.signals.filter(x => x.key === s.key).map(x => x.date));
+    if (!ds.size) continue;
+    const withS = [...allDates].filter(d => ds.has(d));
+    const without = [...allDates].filter(d => !ds.has(d));
+    if (withS.length >= 3 && without.length >= 3) {
+      const rate = a => a.filter(d => freshDs.has(d)).length / a.length * 100;
+      rows.push({ done: true, s, a: rate(withS), b: rate(without), n1: withS.length, n2: without.length });
+    } else rows.push({ done: false, s, marked: ds.size, need: Math.max(0, 3 - withS.length) });
+  }
+  return rows;
+}
+const hasFinding = () => researchRows().some(r => r.done);
+
+const ACH = [
+  { id: 'first-rating', e: '⭐', n: 'טעימה ראשונה', won: () => DATA.feedback.length >= 1, prog: () => [Math.min(1, DATA.feedback.length), 1, 'דירוגים'], deep: 'הדירוג הראשון הופך אותך ממאזין לשותף: מכאן הידע נבנה מהניסיון האמיתי שלך.' },
+  { id: 'rater-5', e: '🌟', n: 'חוקר רעיונות', won: () => DATA.feedback.length >= 5, prog: () => [Math.min(5, DATA.feedback.length), 5, 'דירוגים'], deep: 'חמישה ניסויים קטנים — הכמות שבה מתחיל להיפרד אות מרעש.' },
+  { id: 'first-habit', e: '🎯', n: 'הצבעה לזהות', won: () => DATA.habits.length >= 1, prog: () => [Math.min(1, DATA.habits.length), 1, 'הרגלים'], deep: 'כל פעולה היא הצבעה לזהות. ההרגל הראשון הוא הרגע שבו "אני מנסה" הופך ל"אני אדם שישן טוב".' },
+  { id: 'streak-3', e: '🔥', n: 'שלושה לילות', won: () => bestRun() >= 3, prog: () => [Math.min(3, bestRun()), 3, 'ימים ברצף'], deep: 'שלושה ימים רצופים — הנקודה שבה הרגל מפסיק להיות החלטה ומתחיל להיות ברירת מחדל.' },
+  { id: 'streak-7', e: '🏆', n: 'שבוע של זהב', won: () => bestRun() >= 7, prog: () => [Math.min(7, bestRun()), 7, 'ימים ברצף'], deep: 'שבוע שלם כולל סופ"ש — ההוכחה שההרגל שורד גם בלי מסגרת.' },
+  { id: 'comeback', e: '💪', n: 'לא מפספסים פעמיים', won: () => DATA.habits.some(h => hasComeback(h.history)), prog: () => [DATA.habits.some(h => hasComeback(h.history)) ? 1 : 0, 1, 'חזרות'], deep: 'ההישג החשוב ביותר: אשמה על פספוס מזינה את הפספוס הבא. מי שחוזר למחרת ניצח את מנגנון הכישלון המרכזי.' },
+  { id: 'signal-3', e: '📿', n: 'שלושה לילות של אות', won: () => bestSigRun() >= 3, prog: () => [Math.min(3, bestSigRun()), 3, 'לילות ברצף'], deep: 'כפתור לילה הוא הצהרת בעלות זעירה. שלושה לילות ברצף — הצהרה שהפכה לדפוס.' },
+  { id: 'researcher', e: '🔬', n: 'חוקר של עצמי', won: hasFinding, prog: () => [hasFinding() ? 1 : 0, 1, 'ממצאים'], deep: 'שיא הגשר: כבר לא "מומחים אומרים" אלא "הנתונים שלי מראים".' },
+];
+const LEVELS = [[0, 'מתחילים הלילה'], [60, 'בונה הרגלים'], [150, 'שומר הלילה'], [300, 'קצב יציב'], [500, 'אלוף הרצפים'], [800, 'אמן השינה'], [1200, 'אגדת שינה 🌙']];
+function points() {
+  const checks = DATA.habits.reduce((a, h) => a + Object.keys(h.history).length, 0);
+  const proven = visibleIdeas().filter(i => { const s = stats(i.id); return s.n >= 3 && s.avg >= 4; }).length;
+  return DATA.feedback.length * 10 + checks * 15 + DATA.signals.length * 5 + proven * 50 + ACH.filter(a => a.won()).length * 25;
+}
+
+/* ---- Sheet ---- */
+function openSheet(html) { $('#sheet-body').innerHTML = html; $('#sheet').hidden = false; $('#sheet .close').focus(); }
+function closeSheet() { $('#sheet').hidden = true; }
+$('#sheet .close').onclick = closeSheet;
+$('#sheet .backdrop').onclick = closeSheet;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+const progBar = (cur, max) => `<div class="xpbar"><div style="width:${Math.round(cur / max * 100)}%"></div></div>`;
+function achScreen(a) {
+  const won = a.won(); const [cur, max, unit] = a.prog();
+  openSheet(`<div class="sh-head"><span class="sh-emoji">${a.e}</span><div><div class="sh-title">${a.n}</div>
+    <div class="sh-status ${won ? 'won' : ''}">${won ? '✓ הושג — +25 נק׳' : 'טרם הושג'}</div></div></div>
+    <p class="sh-deep">${a.deep}</p><div class="sh-sec">ההתקדמות שלך</div>${progBar(cur, max)}
+    <div class="xpnext">${cur}/${max} ${unit}</div>`);
+}
+const EMOJIS = ['🌙','☀️','😴','🛏️','📵','🔕','🛁','🚿','☕','🍵','🧊','❄️','⏰','📖','🕯️','🎧','🧘','🫧','🌿','🌅','🏃','🚶','💧','⭐'];
+function emojiPicker(current, onPick) {
+  return {
+    html: `<div class="emgrid">${EMOJIS.map(e => `<button class="${e === current ? 'sel' : ''}" data-e="${e}">${e}</button>`).join('')}</div>`,
+    wire(root) { for (const b of root.querySelectorAll('.emgrid button')) b.onclick = () => onPick(b.dataset.e); }
+  };
+}
+function avatarScreen() {
+  const p = emojiPicker(DATA.settings.avatar || '🌙', async e => { await api('/api/settings', { avatar: e }); closeSheet(); toast(`${e} האווטאר עודכן`); refresh(); });
+  openSheet(`<div class="sh-head"><span class="sh-emoji">${DATA.settings.avatar || '🌙'}</span><div><div class="sh-title">האווטאר שלי</div><div class="sh-status">בחר סמל שמרגיש שלך</div></div></div>${p.html}`);
+  p.wire($('#sheet-body'));
+}
+function habitScreen(h) {
+  const idea = DATA.ideas.find(i => i.id === h.ideaId);
+  openSheet(`<div class="sh-head"><span class="sh-emoji">${h.icon || '🎯'}</span><div><div class="sh-title">${h.name}</div><div class="sh-status">במעקב מאז ${h.createdAt}</div></div></div>
+    ${h.plan ? `<p class="sh-deep">כוונת היישום: "${h.plan}"</p>` : ''}
+    ${idea ? `<p class="sh-deep">למה זה עובד: ${idea.why}</p>` : ''}
+    <div class="sh-sec">המספרים שלך</div>
+    <div class="statgrid">
+      <div class="st"><div class="sv">${streak(h)}</div><div class="sl">רצף נוכחי 🔥</div></div>
+      <div class="st"><div class="sv">${longestRun(h.history)}</div><div class="sl">שיא</div></div>
+      <div class="st"><div class="sv">${Object.keys(h.history).length}</div><div class="sl">סימונים</div></div>
+    </div>
+    <div class="sh-sec">30 הימים האחרונים</div>
+    <div class="dots" style="flex-wrap:wrap;gap:5px">${lastNDates(30).map(d => `<span class="${h.history[d] ? 'on' : ''}" style="width:11px;height:11px"></span>`).join('')}</div>
+    <div class="sh-sec">התאמה אישית ✏️</div>
+    <div id="hs-picker"></div>
+    <div class="addidea"><input id="hs-name" maxlength="80"><input id="hs-plan" maxlength="200" placeholder="כוונת יישום">
+    <button class="pill solid" id="hs-save" style="justify-self:start">שמירה</button></div>`);
+  const body = $('#sheet-body');
+  body.querySelector('#hs-name').value = h.name;
+  body.querySelector('#hs-plan').value = h.plan || '';
+  const p = emojiPicker(h.icon, async e => {
+    await api('/api/habits/update', { id: h.id, icon: e });
+    toast(`${e} האייקון עודכן`); DATA = await api('/api/data');
+    habitScreen(DATA.habits.find(x => x.id === h.id)); renderHabits();
+  });
+  body.querySelector('#hs-picker').innerHTML = p.html;
+  p.wire(body.querySelector('#hs-picker'));
+  body.querySelector('#hs-save').onclick = async () => {
+    await api('/api/habits/update', { id: h.id, name: body.querySelector('#hs-name').value, plan: body.querySelector('#hs-plan').value });
+    closeSheet(); toast('✓ עודכן'); refresh();
+  };
+}
+
+let celebrating = false;
+async function checkAchievements() {
+  const seen = DATA.settings.seenAchievements || [];
+  const fresh = ACH.filter(a => a.won() && !seen.includes(a.id));
+  if (!fresh.length || celebrating) return;
+  celebrating = true;
+  const ids = [...seen, ...fresh.map(a => a.id)];
+  DATA.settings.seenAchievements = ids;
+  await api('/api/settings', { seenAchievements: ids });
+  for (const a of fresh) { toast(`${a.e} הישג חדש: ${a.n} (+25 נק׳)`); confetti(true); vibrate([40, 60, 40]); await new Promise(r => setTimeout(r, 1700)); }
+  celebrating = false; renderJourney();
+}
+
+/* ---- רנדור ---- */
+function renderHero() {
+  const active = DATA.habits.filter(h => h.active);
+  const CIRC = 2 * Math.PI * 40;
+  let pct, cap;
+  if (active.length) { const done = active.filter(h => h.history[todayISO()]).length; pct = done / active.length; cap = `הרגלי היום · ${done}/${active.length}`; }
+  else { const tried = visibleIdeas().filter(i => stats(i.id).n).length; pct = visibleIdeas().length ? tried / visibleIdeas().length : 0; cap = `רעיונות שנוסו · ${tried}/${visibleIdeas().length}`; }
+  $('#ringval').textContent = Math.round(pct * 100) + '%';
+  $('#ringcap').textContent = cap;
+  const fg = $('#ringfg');
+  fg.style.transition = reduceMotion() ? 'none' : 'stroke-dashoffset 0.7s ease';
+  requestAnimationFrame(() => fg.setAttribute('stroke-dashoffset', CIRC * (1 - Math.max(0.006, pct))));
+  $('#f-streak').textContent = Math.max(0, ...active.map(streak), bestSigRun());
+  $('#f-ratings').textContent = `${DATA.feedback.length} דירוגים`;
+}
+let TONIGHT = null;
+function pickTonight() {
+  const untried = visibleIdeas().filter(i => !stats(i.id).n);
+  if (untried.length) { const day = Math.floor(Date.now() / 86400000); return untried[day % untried.length]; }
+  const p = visibleIdeas().map(i => ({ i, s: stats(i.id) })).filter(x => x.s.n && x.s.n < 3).sort((a, b) => b.s.avg - a.s.avg)[0];
+  return p ? p.i : null;
+}
+function wireRating(root, idea, onDone) {
+  root.querySelector('.tried').onclick = () => root.querySelector('.rate').classList.toggle('open');
+  for (const b of root.querySelectorAll('.rate button')) {
+    b.onclick = async () => {
+      await api('/api/feedback', { ideaId: idea.id, score: +b.dataset.v });
+      root.querySelector('.rate').classList.remove('open');
+      root.querySelector('.thanks').textContent = '✓ נרשם';
+      toast('⭐ +10 נק׳ — הדירוג נספר'); confetti(); vibrate(30);
+      setTimeout(onDone, 900);
+    };
+  }
+  const adopt = root.querySelector('.adopt');
+  if (adopt) {
+    if (DATA.habits.some(h => h.active && h.ideaId === idea.id)) adopt.remove();
+    else adopt.onclick = async () => {
+      const plan = prompt('כוונת יישום — מתי ואחרי מה בדיוק?\n"ב-[שעה], אחרי [פעולה קיימת], אני..."', `בשעה ___, אחרי ___, אני ${idea.title}`);
+      if (plan == null) return;
+      try { await api('/api/habits', { name: idea.title, plan, ideaId: idea.id }); refresh(); }
+      catch (e) { $('#habiterr').textContent = e.message; }
+    };
+  }
+}
+function renderTonight() {
+  TONIGHT = pickTonight();
+  if (!TONIGHT) { $('#tonight-title').textContent = 'כל הרעיונות נוסו ✨'; $('#tonight-detail').hidden = true; return; }
+  $('#tonight-title').textContent = TONIGHT.title;
+  const d = $('#tonight-detail');
+  $('#td-title').textContent = '🌙 ' + TONIGHT.title;
+  $('#td-how').textContent = TONIGHT.how;
+  $('#td-why').textContent = TONIGHT.why;
+  $('#td-src').textContent = TONIGHT.source ? 'מקור: ' + TONIGHT.source : '';
+  $('#td-rate').innerHTML = rateButtons();
+  d.querySelector('.thanks').textContent = '';
+  wireRating(d, TONIGHT, refresh);
+}
+$('#moon-tile').onclick = () => { if (!TONIGHT) return; const d = $('#tonight-detail'); d.hidden = !d.hidden; if (!d.hidden) d.scrollIntoView({ block: 'nearest' }); };
+
+const GLYPHS = ['🌙','☀️','📵','🛁','☕','🧊','⏰','📖','🫧','🧘'];
+function renderHabits() {
+  const box = $('#habits');
+  const active = DATA.habits.filter(h => h.active);
+  if (!active.length) { box.innerHTML = '<p class="sub" style="margin:0">עוד אין הרגלים — נסו רעיון, ואם תרם, "אמץ כהרגל".</p>'; return; }
+  box.innerHTML = '';
+  active.forEach((h, idx) => {
+    const days = lastNDates(14);
+    const row = document.createElement('div');
+    row.className = 'habit';
+    row.innerHTML = `
+      <button class="glyph" aria-label="פרטי ההרגל">${h.icon || GLYPHS[idx % GLYPHS.length]}</button>
+      <div class="info"><div class="hname"></div><div class="hplan"></div></div>
+      <div class="meta">
+        <div class="dots">${days.map(d => `<span class="${h.history[d] ? 'on' : ''}"></span>`).join('')}</div>
+        <span class="streak">🔥 ${streak(h)} ימים</span>
+      </div>
+      <button class="pill check"></button>
+      <button class="ghost archive">שחרור</button>`;
+    row.querySelector('.hname').textContent = h.name;
+    row.querySelector('.hplan').textContent = h.plan || '';
+    row.querySelector('.glyph').onclick = () => habitScreen(h);
+    const check = row.querySelector('.check');
+    const done = !!h.history[todayISO()];
+    check.textContent = done ? '✓ בוצע' : 'סימון';
+    check.classList.toggle('done', done);
+    if (!done) check.classList.add('solid');
+    check.onclick = async () => {
+      await api('/api/habits/toggle', { id: h.id, date: todayISO() });
+      if (!done) { const s = streak(h) + 1; toast(s >= 3 ? `🔥 +15 נק׳ — ${s} ימים ברצף!` : '🔥 +15 נק׳ — עוד הצבעה לזהות'); confetti(); vibrate(25); }
+      refresh();
+    };
+    row.querySelector('.archive').onclick = async () => {
+      if (confirm(`לשחרר את "${h.name}"? ההיסטוריה נשמרת.`)) { await api('/api/habits/archive', { id: h.id }); refresh(); }
+    };
+    box.appendChild(row);
+  });
+}
+function renderJourney() {
+  const pts = points();
+  let li = 0;
+  while (li + 1 < LEVELS.length && pts >= LEVELS[li + 1][0]) li++;
+  const cur = LEVELS[li], next = LEVELS[li + 1];
+  $('#lv-name').textContent = cur[1];
+  $('#lv-pts').textContent = `${pts} נק׳`;
+  $('#xpfill').style.width = Math.round(Math.min(1, next ? (pts - cur[0]) / (next[0] - cur[0]) : 1) * 100) + '%';
+  $('#lv-next').textContent = next ? `עוד ${next[0] - pts} נק׳ לדרגת "${next[1]}"` : 'הדרגה הגבוהה ביותר!';
+  $('#badges').innerHTML = ACH.map((a, k) => `<button class="bdg ${a.won() ? 'won' : ''}" data-k="${k}"><span class="e">${a.e}</span><span class="n">${a.n}</span></button>`).join('');
+  for (const b of $('#badges').querySelectorAll('.bdg')) b.onclick = () => achScreen(ACH[+b.dataset.k]);
+}
+function renderIdeas() {
+  const box = $('#ideas');
+  box.innerHTML = '';
+  const sorted = visibleIdeas().map(i => ({ i, s: stats(i.id) })).sort((a, b) => (b.s.avg ?? -1) - (a.s.avg ?? -1) || b.s.n - a.s.n);
+  for (const { i, s } of sorted) {
+    const d = document.createElement('details');
+    d.className = 'idea';
+    d.innerHTML = `<summary><span class="ititle2"></span>${badge(s)}<span class="chev">◀</span></summary>
+      <div class="body"><p class="how"></p><p class="why"></p><p class="src"></p>
+      <div class="row"><button class="pill solid tried">ניסיתי — לדרג</button>
+      <div class="rate"><span class="q">כמה זה תרם?</span>${rateButtons()}</div>
+      <button class="pill adopt">אמץ כהרגל</button>
+      <button class="ghost hide">לא רלוונטי לי</button><span class="thanks"></span></div></div>`;
+    d.querySelector('.ititle2').textContent = i.title;
+    d.querySelector('.how').textContent = i.how;
+    d.querySelector('.why').textContent = i.why;
+    d.querySelector('.src').textContent = i.source ? 'מקור: ' + i.source : '';
+    wireRating(d, i, refresh);
+    d.querySelector('.hide').onclick = async () => { await api('/api/ideas/hide', { id: i.id }); refresh(); };
+    box.appendChild(d);
+  }
+}
+
+/* ---- אפירמציות ---- */
+const AFFIRMATIONS = ['אני ישן באופן טבעי ובקלות.', 'הגוף שלי מתמלא בשנתי בכל מה שהוא צריך.', 'השינה שלי עמוקה ורציפה.', 'אני נושם עמוק. השרירים שלי רפויים.', 'הלילה הוא זמן ההתחדשות שלי.', 'אני משחרר את היום — הוא עשה את שלו.', 'המיטה שלי היא מקום של מנוחה.', 'אני בוחר להירגע. הגוף כבר יודע את הדרך.', 'כל נשיפה מרפה אותי עוד קצת.', 'אני אדם שישן טוב.'];
+let affirmOffset = 0;
+function renderAffirm() {
+  const list = [...AFFIRMATIONS, ...(DATA.settings.myAffirmations || [])];
+  $('#affirm-text').textContent = list[(Math.floor(Date.now() / 86400000) + affirmOffset) % list.length];
+}
+$('#affirm').onclick = e => { if (e.target.id === 'affirm-add') return; affirmOffset++; renderAffirm(); vibrate(15); };
+$('#affirm-add').onclick = e => {
+  e.stopPropagation();
+  openSheet(`<div class="sh-head"><span class="sh-emoji">🌌</span><div><div class="sh-title">משפט משלי</div><div class="sh-status">בלשון הווה, כאילו זה כבר קורה</div></div></div>
+    <p class="sh-deep">המשפט החזק ביותר הוא זה שנוסח במילים שלך. התחל ב"אני…".</p>
+    <div class="addidea"><input id="aff-new" placeholder='למשל: "אני נרדם מתוך שקט"' maxlength="120">
+    <button class="pill solid" id="aff-save" style="justify-self:start">הוספה למחזור</button></div>`);
+  $('#aff-save').onclick = async () => {
+    const v = $('#aff-new').value.trim(); if (!v) return;
+    await api('/api/settings', { myAffirmations: [...(DATA.settings.myAffirmations || []), v] });
+    closeSheet(); toast('🌌 המשפט שלך הצטרף למחזור'); confetti(); refresh();
+  };
+};
+
+/* ---- כפתורי לילה ---- */
+const SIGNALS = [
+  { key: 'noscreen', e: '📵', l: 'שעה בלי מסך לפני השינה' },
+  { key: 'easysleep', e: '😴', l: 'נרדמתי בקלות' },
+  { key: 'fresh', e: '☀️', l: 'קמתי רענן' },
+  { key: 'darkroom', e: '🌑', l: 'חדר חשוך וקריר' },
+  { key: 'earlycoffee', e: '☕', l: 'קפה אחרון מוקדם' },
+  { key: 'ritual', e: '🕯️', l: 'עשיתי טקס ערב' },
+  { key: 'daylight', e: '🌿', l: 'הייתי בחוץ באור יום' },
+  { key: 'calm', e: '🧘', l: 'הלכתי לישון רגוע' },
+];
+const sigDates = key => new Set(DATA.signals.filter(s => s.key === key).map(s => s.date));
+function sigStreak(key) {
+  const ds = sigDates(key); let n = 0;
+  const d = new Date(todayISO() + 'T12:00:00');
+  if (!ds.has(todayISO())) d.setDate(d.getDate() - 1);
+  for (;;) { const k = d.toLocaleDateString('sv-SE'); if (ds.has(k)) { n++; d.setDate(d.getDate() - 1); } else break; }
+  return n;
+}
+function renderSignals() {
+  const box = $('#sigs');
+  box.innerHTML = '';
+  for (const s of SIGNALS) {
+    const on = sigDates(s.key).has(todayISO());
+    const st = sigStreak(s.key);
+    const b = document.createElement('button');
+    b.className = 'sig' + (on ? ' on' : '');
+    b.setAttribute('aria-pressed', on);
+    b.innerHTML = `<span class="se">${s.e}</span><span class="sl">${s.l}</span>${st >= 2 ? `<span class="sk">🔥×${st}</span>` : ''}`;
+    b.onclick = async () => {
+      const r = await api('/api/signals/toggle', { key: s.key, date: todayISO() });
+      if (r.on) { const ns = sigStreak(s.key) + 1; toast(ns >= 3 ? `🔥 לילה ${ns} ברצף — ${s.l}!` : `${s.e} +5 נק׳ — נרשם`); confetti(); vibrate(25); }
+      refresh();
+    };
+    box.appendChild(b);
+  }
+}
+function renderResearch() {
+  const rows = researchRows();
+  const box = $('#findings');
+  if (!rows.length) { box.innerHTML = '<p class="sub" style="margin:0">התחילו להקיש על כפתורי הלילה — הממצא הראשון יופיע כאן לבד.</p>'; return; }
+  rows.sort((a, b) => b.done - a.done);
+  box.innerHTML = rows.map(r => r.done
+    ? `<div class="find"><span class="fe">${r.s.e}</span><span class="fd">${r.s.l}<small>על סמך ${r.n1} לילות מול ${r.n2}</small></span>
+       <span class="fv ${r.a >= r.b ? 'up' : 'down'}">רענן ב-${Math.round(r.a)}% ${r.a >= r.b ? '▲' : '▼'} מול ${Math.round(r.b)}%</span></div>`
+    : `<div class="find" style="opacity:0.65"><span class="fe">${r.s.e}</span><span class="fd">${r.s.l}<small>${r.marked} סימונים · עוד ${r.need} לילות לממצא</small></span></div>`
+  ).join('');
+}
+
+/* ---- ייצוא משוב הפיילוט ---- */
+$('#exportbtn').onclick = async () => {
+  const d = loadD();
+  const payload = JSON.stringify({
+    exportedAt: new Date().toISOString(),
+    points: points(), signals: d.signals, feedback: d.feedback,
+    habits: d.habits.map(h => ({ name: h.name, plan: h.plan, createdAt: h.createdAt, active: h.active, days: Object.keys(h.history).sort() })),
+    myIdeas: d.ideas.filter(i => i.id.startsWith('u')), myAffirmations: d.settings.myAffirmations || [],
+    achievements: ACH.filter(a => a.won()).map(a => a.id),
+  }, null, 2);
+  const fname = `sleep-pilot-${todayISO()}.json`;
+  if (window.claude && window.claude.downloads) {
+    try { await window.claude.downloads.save({ filename: fname, data: payload }); $('#exportmsg').textContent = '✓ הקובץ נשמר — שלחו אותו חזרה 🙏'; }
+    catch (e) { if (e && e.code === 'declined') $('#exportmsg').textContent = 'הייצוא בוטל'; else $('#exportmsg').textContent = 'הייצוא לא זמין כרגע'; }
+  } else {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([payload], { type: 'application/json' }));
+    a.download = fname; a.click();
+    $('#exportmsg').textContent = '✓ הקובץ ירד — שלחו אותו חזרה 🙏';
+  }
+};
+
+async function refresh() {
+  DATA = await api('/api/data');
+  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderSignals(); renderResearch();
+  $('#avatar').textContent = DATA.settings.avatar || '🌙';
+  checkAchievements();
+}
+$('#avatar').onclick = () => avatarScreen();
+$('#addbtn').onclick = async () => {
+  const title = $('#ntitle').value.trim(); if (!title) return;
+  await api('/api/ideas', { title, how: $('#nhow').value });
+  $('#ntitle').value = $('#nhow').value = '';
+  toast('💡 הרעיון נוסף לספרייה'); refresh();
+};
+function onTap(el, fn) { el.onclick = fn; }
+onTap($('#tile-ring'), () => {
+  const active = DATA.habits.filter(h => h.active);
+  openSheet(`<div class="sh-head"><span class="sh-emoji">⭕</span><div><div class="sh-title">השלמת היום</div>
+    <div class="sh-status">${active.length ? `${active.filter(h => h.history[todayISO()]).length}/${active.length} סומנו היום` : 'אין הרגלים פעילים'}</div></div></div>
+    <p class="sh-deep">הטבעת נסגרת כשכל ההרגלים סומנו. היא מתאפסת כל בוקר — כל יום הוא הצבעה חדשה.</p>
+    ${active.map(h => `<div class="sh-row">${h.history[todayISO()] ? '✅' : '⬜'} ${h.name}</div>`).join('')}`);
+});
+onTap($('#tile-streak'), () => {
+  openSheet(`<div class="sh-head"><span class="sh-emoji">🔥</span><div><div class="sh-title">הרצפים שלך</div>
+    <div class="sh-status">שיא: ${Math.max(bestRun(), bestSigRun())} ימים</div></div></div>
+    <p class="sh-deep">רצף הוא תגמול מיידי על התנהגות שהפרס שלה מגיע באיחור. וחשוב ממנו: <b>לעולם לא מפספסים פעמיים</b>.</p>`);
+});
+for (const b of document.querySelectorAll('[data-to]')) {
+  b.addEventListener('click', () => {
+    document.getElementById(b.dataset.to)?.scrollIntoView({ block: 'start', behavior: reduceMotion() ? 'auto' : 'smooth' });
+    for (const x of document.querySelectorAll('[data-to]')) x.classList.toggle('on', x.dataset.to === b.dataset.to);
+  });
+}
+const hh = new Date().getHours();
+$('#greet').textContent = hh < 5 ? 'לילה טוב' : hh < 12 ? 'בוקר טוב' : hh < 18 ? 'צהריים טובים' : 'ערב טוב';
+$('#hdate').textContent = new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' });
+
+/* ---- שמיים חיים לפי זריחה/שקיעה אמיתיות ---- */
+const SKY_LAT = 32.08, SKY_LON = 34.78;
+function sunTimes(d) {
+  const rad = Math.PI / 180;
+  const start = new Date(d.getFullYear(), 0, 0);
+  const doy = Math.floor((d - start) / 86400000);
+  const g = (2 * Math.PI / 365) * (doy - 1 + (d.getHours() - 12) / 24);
+  const eqtime = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const ha = Math.acos(Math.cos(90.833 * rad) / (Math.cos(SKY_LAT * rad) * Math.cos(decl)) - Math.tan(SKY_LAT * rad) * Math.tan(decl)) / rad;
+  const tz = -d.getTimezoneOffset();
+  return { sunrise: 720 - 4 * (SKY_LON + ha) - eqtime + tz, sunset: 720 - 4 * (SKY_LON - ha) - eqtime + tz };
+}
+const hex2rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const mixc = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+const cssc = c => `rgb(${c[0]},${c[1]},${c[2]})`;
+const P_NIGHT = ['#070b1a', '#0d1526', '#16223d', '#050912'].map(hex2rgb);
+const P_DAWN = ['#1c2a52', '#5a5488', '#e09a6e', '#2a3a5e'].map(hex2rgb);
+const P_GOLD = ['#3a6ea8', '#e8a25e', '#f7c877', '#2a5580'].map(hex2rgb);
+const P_DAY = ['#3f97e6', '#7fc2f2', '#d8efff', '#1f6fa8'].map(hex2rgb);
+const P_SUNSET = ['#33305e', '#c05a60', '#f5a058', '#2c3a66'].map(hex2rgb);
+const P_DUSK = ['#121638', '#2e2a58', '#71486e', '#0e1530'].map(hex2rgb);
+const SKY_STARS = Array.from({ length: 110 }, (_, i) => ({ x: ((i * 137.508) % 360) / 360, y: ((i * 97.31) % 100) / 100 * 0.72, r: 0.6 + ((i * 7) % 10) / 9, tw: (i % 7) / 7, order: ((i * 61) % 110) / 110 }));
+function skyPalette(nowMin, sr, ss) {
+  const keys = [[0, P_NIGHT], [sr - 70, P_NIGHT], [sr - 25, P_DAWN], [sr + 20, P_GOLD], [sr + 90, P_DAY], [ss - 90, P_DAY], [ss - 25, P_SUNSET], [ss + 30, P_DUSK], [ss + 80, P_NIGHT], [1441, P_NIGHT]];
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (nowMin >= keys[i][0] && nowMin < keys[i + 1][0]) {
+      const t = (nowMin - keys[i][0]) / (keys[i + 1][0] - keys[i][0]);
+      return keys[i][1].map((c, j) => mixc(c, keys[i + 1][1][j], t));
+    }
+  }
+  return P_NIGHT;
+}
+function drawSky() {
+  const cv = $('#sky'), ctx = cv.getContext('2d');
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  const W = innerWidth, H = innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  ctx.scale(dpr, dpr);
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  const { sunrise: sr, sunset: ss } = sunTimes(now);
+  const isDay = nowMin >= sr && nowMin < ss;
+  document.documentElement.dataset.sky = isDay ? 'day' : 'night';
+  $('#moon-tile').classList.toggle('day', isDay);
+  const [top, mid, hor, sea] = skyPalette(nowMin, sr, ss);
+  const horizonY = H * 0.8;
+  const g = ctx.createLinearGradient(0, 0, 0, horizonY);
+  g.addColorStop(0, cssc(top)); g.addColorStop(0.55, cssc(mid)); g.addColorStop(1, cssc(hor));
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, horizonY);
+  const p = (nowMin - sr) / (ss - sr);
+  let sunX = null, sunAlt = 0;
+  if (p > -0.06 && p < 1.06) {
+    sunAlt = Math.sin(Math.max(0, Math.min(1, p)) * Math.PI);
+    sunX = W * (0.1 + 0.8 * p);
+    const sunY = horizonY - sunAlt * (horizonY - H * 0.14) + (p < 0 || p > 1 ? (Math.abs(p > 1 ? p - 1 : p) * 300) : 0);
+    const R = 26 + (1 - sunAlt) * 16;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, W, horizonY); ctx.clip();
+    const glow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, R * 6);
+    const warm = sunAlt > 0.5 ? '255,244,214' : '255,190,120';
+    glow.addColorStop(0, `rgba(${warm},0.85)`); glow.addColorStop(0.25, `rgba(${warm},0.25)`); glow.addColorStop(1, `rgba(${warm},0)`);
+    ctx.fillStyle = glow; ctx.fillRect(sunX - R * 6, sunY - R * 6, R * 12, R * 12);
+    ctx.beginPath(); ctx.arc(sunX, sunY, R, 0, 7);
+    ctx.fillStyle = sunAlt > 0.5 ? '#fff7de' : '#ffd9a0'; ctx.fill();
+    ctx.restore();
+  }
+  const sg = ctx.createLinearGradient(0, horizonY, 0, H);
+  sg.addColorStop(0, cssc(mixc(hor, sea, 0.35))); sg.addColorStop(0.25, cssc(sea)); sg.addColorStop(1, cssc(mixc(sea, [0, 0, 0], 0.45)));
+  ctx.fillStyle = sg; ctx.fillRect(0, horizonY, W, H - horizonY);
+  ctx.fillStyle = `rgba(${hor.join(',')},0.6)`; ctx.fillRect(0, horizonY - 1, W, 2);
+  if (sunX != null && sunAlt < 0.55) {
+    const a = (0.55 - sunAlt) * 0.75;
+    for (let i = 0; i < 22; i++) {
+      const y = horizonY + 5 + i * (H - horizonY) / 26;
+      const w = (30 + i * 7) * (0.6 + 0.4 * Math.sin(i * 2.7));
+      ctx.fillStyle = `rgba(255,${170 + Math.round(sunAlt * 60)},110,${(a * (1 - i / 24)).toFixed(3)})`;
+      ctx.fillRect(sunX - w / 2, y, w, 2.2);
+    }
+  }
+  let nf = 0;
+  if (nowMin > ss + 10) nf = Math.min(1, (nowMin - ss - 10) / 70);
+  else if (nowMin < sr - 10) nf = Math.min(1, (sr - 10 - nowMin) / 70 + 0.6, 1);
+  if (nf > 0) {
+    const nightProg = nowMin > ss ? (nowMin - ss) / (1440 - ss + sr) : (nowMin + 1440 - ss) / (1440 - ss + sr);
+    for (const s of SKY_STARS) {
+      const alpha = Math.max(0, Math.min(1, (nf - s.order) * 3)) * (0.45 + 0.55 * s.tw);
+      if (alpha <= 0) continue;
+      const y = (s.y - nightProg * 0.1) * H;
+      if (y < 0 || y > horizonY - 8) continue;
+      ctx.beginPath(); ctx.arc(s.x * W, y, s.r, 0, 7);
+      ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`; ctx.fill();
+    }
+    const mx = W * 0.82, my = H * 0.14;
+    ctx.globalAlpha = nf * 0.9;
+    ctx.beginPath(); ctx.arc(mx, my, 20, 0, 7); ctx.fillStyle = '#e8e4f5'; ctx.fill();
+    ctx.beginPath(); ctx.arc(mx - 9, my - 5, 18, 0, 7); ctx.fillStyle = cssc(top); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+drawSky();
+setInterval(drawSky, 60000);
+addEventListener('resize', drawSky);
+
+refresh();
+</script>
+</body></html>
