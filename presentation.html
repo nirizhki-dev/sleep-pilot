@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>לישון טוב זו מיומנות — מצגת</title>
+<style>
+  :root {
+    --bg-top: #101b30; --bg-bottom: #07080d;
+    --card: #1a1d26; --ink: #f1f2f7; --ink-2: #b9bdcc; --muted: #868da0;
+    --accent: #8b7ff5; --accent-deep: #5b4ee0; --accent-soft: rgba(139,127,245,0.16);
+    --coral: #ff8a66; --good: #3ecf9a; --hair: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; color: var(--ink);
+    background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+  }
+  .stars { position: fixed; inset: 0; pointer-events: none;
+    background-image:
+      radial-gradient(1.3px 1.3px at 12% 18%, rgba(255,255,255,0.7) 50%, transparent 51%),
+      radial-gradient(1px 1px at 28% 8%, rgba(255,255,255,0.45) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 45% 26%, rgba(255,255,255,0.55) 50%, transparent 51%),
+      radial-gradient(1px 1px at 63% 12%, rgba(255,255,255,0.4) 50%, transparent 51%),
+      radial-gradient(1.7px 1.7px at 78% 30%, rgba(255,255,255,0.6) 50%, transparent 51%),
+      radial-gradient(1px 1px at 90% 9%, rgba(255,255,255,0.5) 50%, transparent 51%),
+      radial-gradient(1.2px 1.2px at 20% 55%, rgba(255,255,255,0.35) 50%, transparent 51%),
+      radial-gradient(1px 1px at 70% 62%, rgba(255,255,255,0.3) 50%, transparent 51%);
+  }
+  .slide {
+    position: fixed; inset: 0; display: none; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 6vh 8vw; gap: 2.2vh;
+  }
+  .slide.on { display: flex; }
+  .eyebrow { font-size: clamp(0.7rem, 1.6vw, 0.9rem); letter-spacing: 0.18em; color: var(--accent); font-weight: 700; }
+  h1 { font-size: clamp(1.9rem, 5.5vw, 3.6rem); font-weight: 800; margin: 0; letter-spacing: -0.02em; text-wrap: balance; line-height: 1.2; }
+  h2 { font-size: clamp(1.5rem, 4vw, 2.6rem); font-weight: 780; margin: 0; letter-spacing: -0.015em; text-wrap: balance; }
+  p.lead { font-size: clamp(1rem, 2.3vw, 1.35rem); color: var(--ink-2); max-width: 34em; margin: 0; line-height: 1.6; }
+  .moon { width: clamp(70px, 12vw, 120px); height: clamp(70px, 12vw, 120px); border-radius: 50%; position: relative;
+    background: radial-gradient(circle at 62% 38%, #fff, #d9d2ff 70%); box-shadow: 0 0 60px rgba(180,168,255,0.5); }
+  .moon::after { content: ""; position: absolute; top: -10%; left: -18%; width: 100%; height: 100%; border-radius: 50%; background: var(--bg-top); }
+  .cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 980px; }
+  .c { background: var(--card); border: 1px solid var(--hair); border-radius: 22px; padding: 22px 24px; flex: 1; min-width: 200px; max-width: 300px; text-align: right; }
+  .c .ce { font-size: 1.9rem; }
+  .c .ct { font-weight: 750; margin: 6px 0 4px; font-size: 1.02rem; }
+  .c .cd { font-size: 0.86rem; color: var(--ink-2); line-height: 1.5; }
+  .c .cs { font-size: 0.7rem; color: var(--muted); margin-top: 8px; }
+  .big-num { font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 800; color: var(--accent); line-height: 1; }
+  .quote { font-size: clamp(1.3rem, 3.4vw, 2.1rem); font-weight: 320; line-height: 1.6; max-width: 26em; }
+  .applink {
+    display: inline-block; background: linear-gradient(135deg, var(--accent-deep), var(--accent));
+    color: #fff; text-decoration: none; font-weight: 750; font-size: clamp(1rem, 2.4vw, 1.4rem);
+    padding: 16px 34px; border-radius: 999px; box-shadow: 0 12px 40px rgba(91,78,224,0.45);
+  }
+  .url { font-size: clamp(0.8rem, 1.8vw, 1.05rem); color: var(--ink-2); direction: ltr; font-family: ui-monospace, monospace; }
+  .nav { position: fixed; bottom: 22px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 5; }
+  .nav .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--hair); border: none; cursor: pointer; padding: 0; }
+  .nav .dot.on { background: var(--accent); }
+  .hint { position: fixed; bottom: 46px; left: 0; right: 0; text-align: center; font-size: 0.72rem; color: var(--muted); }
+  .arrow { position: fixed; top: 50%; transform: translateY(-50%); background: var(--card); border: 1px solid var(--hair); color: var(--ink-2); width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; z-index: 5; }
+  .arrow.next { right: 14px; } .arrow.prev { left: 14px; }
+  .tag { background: var(--accent-soft); color: var(--accent); border-radius: 99px; padding: 4px 14px; font-size: 0.8rem; font-weight: 650; }
+  @media (max-width: 640px) { .arrow { display: none; } }
+</style>
+</head>
+<body>
+<div class="stars" aria-hidden="true"></div>
+
+<section class="slide on">
+  <div class="moon" aria-hidden="true"></div>
+  <div class="eyebrow">מסע אישי אל שינה מעולה</div>
+  <h1>לישון טוב זו מיומנות.<br>וכל מיומנות אפשר לבנות.</h1>
+  <p class="lead">אפליקציה שהיא גשר לאחריות אישית על השינה — ממילים, דרך מעשים קטנים, ועד ידע מגובה נתונים.</p>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">הבעיה האמיתית</div>
+  <h2>אנחנו יודעים שצריך לישון.<br>ובכל זאת דוחים.</h2>
+  <div class="cards">
+    <div class="c"><div class="ce">🌙</div><div class="ct">דחיינות שינה</div><div class="cd">דחייה רצונית של שעת השינה — בלי שום סיבה חיצונית. הפער הנפוץ ביותר בין כוונה להתנהגות.</div><div class="cs">SLEEP, Oxford, 2026</div></div>
+    <div class="c"><div class="ce">🧠</div><div class="ct">לא עצלות</div><div class="cd">בסוף היום כוח הרצון מדולדל, והצורך ב"זמן לעצמי" מנצח את השעון. להילחם בזה בכוח — מתכון לכישלון.</div><div class="cs">מטא-אנליזה, 43 מחקרים, 2022</div></div>
+    <div class="c"><div class="ce">😔</div><div class="ct">אשמה מזינה דחייה</div><div class="cd">ביקורת עצמית על פספוס מגדילה את הסיכוי לפספוס הבא. הפתרון חייב להיות בלי שיפוטיות.</div><div class="cs">J. Health Psychology, 2026</div></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">הגישה</div>
+  <h2>גשר בשלושה צעדים</h2>
+  <div class="cards">
+    <div class="c"><div class="ce">🌌</div><div class="ct">1 · מילים</div><div class="cd">אפירמציות זהות בלשון הווה: "אני ישן באופן טבעי", "אני נושם עמוק והשרירים רפויים". הזהות קודמת להרגל.</div></div>
+    <div class="c"><div class="ce">🔘</div><div class="ct">2 · מעשים</div><div class="cd">כפתורי לילה בהקשה אחת — אפס טפסים. כל כפתור צובר רצף משלו, וכל רצף נחגג.</div></div>
+    <div class="c"><div class="ce">🔬</div><div class="ct">3 · ידע</div><div class="cd">המערכת מצליבה לבד: אחרי אילו התנהגויות קמים רעננים? הנתונים שלך הופכים למחקר שלך.</div></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">מה המדע אומר</div>
+  <h2>שלושה ממצאים שמניעים את האפליקציה</h2>
+  <div class="cards">
+    <div class="c"><div class="ce">📝</div><div class="ct">משפט אם–אז</div><div class="cd">כוונת יישום אחת ("ב-22:45, אחרי הפרק — הטלפון למטבח") הקדימה בפועל את שעת השינה בניסויים מבוקרים.</div><div class="cs">Psychology & Health, 2020; 2025</div></div>
+    <div class="c"><div class="ce">☀️</div><div class="ct">אור בוקר</div><div class="cd">אור יום בהיר ועקבי — במיוחד בבוקר — נקשר להירדמות מוקדמת ולשינה עמוקה יותר.</div><div class="cs">University of Manchester, 2026</div></div>
+    <div class="c"><div class="ce">☕</div><div class="ct">קפאין — 6 שעות</div><div class="cd">קפה 6 שעות לפני השינה קיצר את השינה הנמדדת בכשעה. הקפה האחרון קובע יותר משחושבים.</div><div class="cs">Drake et al., 2013 (מבוקר)</div></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">בתוך האפליקציה</div>
+  <h2>קל. מהנה. שלך.</h2>
+  <div class="cards">
+    <div class="c"><div class="ce">💡</div><div class="ct">רעיון אחד להערב</div><div class="cd">לא רשימות — הצעה קטנה אחת ביום, מבוססת מחקר עם מקור.</div></div>
+    <div class="c"><div class="ce">⭐</div><div class="ct">דירוג בלחיצה</div><div class="cd">ניסית? דרג 1–5 כמה זה תרם. רעיון שמוכיח את עצמו מסומן ★ מוכח.</div></div>
+    <div class="c"><div class="ce">🔥</div><div class="ct">רצפים והישגים</div><div class="cd">נקודות, דרגות זהות וקונפטי. וההישג הכי חשוב: "לא מפספסים פעמיים" — על חזרה אחרי נפילה.</div></div>
+    <div class="c"><div class="ce">🧪</div><div class="ct">מחקר יומי</div><div class="cd">כל בוקר: תמצות מחקר עדכני + צעד יישומי אחד להערב.</div></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">העיקרון המרכזי</div>
+  <p class="quote">"כל ערב שמסומן הוא הצבעה לזהות:<br><b>אני אדם שישן טוב.</b><br><br>נשבר רצף? זה בסדר.<br>הכלל היחיד — לא מפספסים פעמיים."</p>
+  <span class="tag">בהשראת "הרגלים אטומיים" · ג'יימס קליר</span>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">מצטרפים עכשיו</div>
+  <div class="big-num">30 שניות ביום</div>
+  <h2>זה כל מה שזה מבקש</h2>
+  <a class="applink" href="https://nirizhki-dev.github.io/sleep-pilot/" target="_blank" rel="noopener">🌙 לפתיחת האפליקציה</a>
+  <div class="url">nirizhki-dev.github.io/sleep-pilot</div>
+  <p class="lead">נפתחת בכל דפדפן, בלי הרשמה. טיפ: "הוסף למסך הבית" — והיא מתנהגת כמו אפליקציה רגילה. הנתונים נשארים אצלך במכשיר בלבד.</p>
+</section>
+
+<button class="arrow prev" aria-label="הקודם">→</button>
+<button class="arrow next" aria-label="הבא">←</button>
+<div class="hint">חצים / הקשה לצדדים למעבר בין שקפים</div>
+<div class="nav" id="nav"></div>
+
+<script>
+const slides = [...document.querySelectorAll('.slide')];
+let cur = 0;
+const nav = document.getElementById('nav');
+slides.forEach((_, i) => {
+  const d = document.createElement('button');
+  d.className = 'dot' + (i === 0 ? ' on' : '');
+  d.setAttribute('aria-label', 'שקף ' + (i + 1));
+  d.onclick = () => go(i);
+  nav.appendChild(d);
+});
+function go(i) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => s.classList.toggle('on', k === cur));
+  [...nav.children].forEach((d, k) => d.classList.toggle('on', k === cur));
+}
+addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft' || e.key === ' ' || e.key === 'PageDown') go(cur + 1);
+  if (e.key === 'ArrowRight' || e.key === 'PageUp') go(cur - 1);
+});
+addEventListener('click', e => {
+  if (e.target.closest('.nav') || e.target.closest('a') || e.target.closest('.arrow')) return;
+  go(cur + (e.clientX < innerWidth / 2 ? 1 : -1));
+});
+document.querySelector('.arrow.next').onclick = () => go(cur + 1);
+document.querySelector('.arrow.prev').onclick = () => go(cur - 1);
+let tx = null;
+addEventListener('touchstart', e => tx = e.touches[0].clientX);
+addEventListener('touchend', e => {
+  if (tx == null) return;
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) go(cur + (dx > 0 ? 1 : -1));
+  tx = null;
+});
+</script>
+</body>
+</html>
