@@ -282,6 +282,20 @@
     <div id="findings"></div>
   </section>
 
+  <section class="card" id="sec-daily" hidden>
+    <h2>🧪 מחקר היום</h2>
+    <p class="sub" id="dr-date"></p>
+    <div style="font-size:1.05rem;font-weight:750;margin:0 0 8px" id="dr-title"></div>
+    <p style="font-size:0.88rem;color:var(--ink-2);margin:0 0 10px" id="dr-summary"></p>
+    <span class="badge" id="dr-evidence"></span>
+    <div style="background:var(--accent-soft);border-radius:16px;padding:12px 15px;margin:12px 0 8px">
+      <div style="font-size:0.72rem;font-weight:700;color:var(--accent);letter-spacing:0.06em;margin-bottom:4px">ליישום הערב</div>
+      <div style="font-size:0.9rem" id="dr-insight"></div>
+    </div>
+    <p style="font-size:0.72rem;color:var(--muted);margin:0 0 10px" id="dr-source"></p>
+    <button class="ghost" id="dr-archive">מחקרים קודמים ←</button>
+  </section>
+
   <section class="card" id="tonight-detail" hidden>
     <h2 id="td-title"></h2>
     <p class="how" id="td-how" style="font-size:0.9rem;margin:0 0 4px"></p>
@@ -817,9 +831,37 @@ $('#exportbtn').onclick = async () => {
   }
 };
 
+/* ---- מחקר היום — נטען מ-research.json שהחוקר היומי מעדכן ---- */
+let RESEARCH = null;
+async function renderDailyResearch() {
+  if (!RESEARCH) {
+    try {
+      const res = await fetch('./research.json', { cache: 'no-store' });
+      RESEARCH = await res.json();
+    } catch { return; }
+  }
+  if (!Array.isArray(RESEARCH) || !RESEARCH.length) return;
+  const r = RESEARCH[0];
+  $('#sec-daily').hidden = false;
+  $('#dr-date').textContent = new Date(r.date + 'T12:00:00').toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' });
+  $('#dr-title').textContent = r.title;
+  $('#dr-summary').textContent = r.summary;
+  $('#dr-evidence').textContent = '🔎 ' + r.evidence;
+  $('#dr-insight').textContent = r.insight;
+  $('#dr-source').textContent = 'מקור: ' + r.source;
+  $('#dr-archive').style.display = RESEARCH.length > 1 ? '' : 'none';
+  $('#dr-archive').onclick = () => openSheet(`
+    <div class="sh-head"><span class="sh-emoji">🧪</span><div><div class="sh-title">ארכיון המחקרים</div>
+    <div class="sh-status">${RESEARCH.length} תובנות שנאספו</div></div></div>
+    ${RESEARCH.map(x => `<div class="sh-row" style="flex-direction:column;align-items:flex-start;gap:3px">
+      <b>${x.title}</b>
+      <span style="font-size:0.78rem;color:var(--ink-2)">${x.insight}</span>
+      <small style="color:var(--muted)">${x.date} · ${x.evidence} · ${x.source}</small></div>`).join('')}`);
+}
+
 async function refresh() {
   DATA = await api('/api/data');
-  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderSignals(); renderResearch();
+  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderSignals(); renderResearch(); renderDailyResearch();
   $('#avatar').textContent = DATA.settings.avatar || '🌙';
   checkAchievements();
 }
