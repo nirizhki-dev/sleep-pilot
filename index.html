@@ -227,6 +227,17 @@
   .statgrid .sv { font-size: 1.35rem; font-weight: 780; }
   .statgrid .sl { font-size: 0.7rem; color: var(--muted); }
 
+  /* ---- טקסים ---- */
+  #ritual { position: fixed; inset: 0; z-index: 30; background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom)); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 8vh 8vw; gap: 3vh; }
+  #ritual[hidden] { display: none; }
+  #ritual .r-eyebrow { font-size: 0.72rem; letter-spacing: 0.14em; color: var(--accent); font-weight: 700; }
+  #ritual .r-main { font-size: clamp(1.3rem, 5.5vw, 1.9rem); font-weight: 340; line-height: 1.55; max-width: 22em; text-wrap: balance; }
+  #ritual .r-sub { font-size: 0.85rem; color: var(--muted); }
+  #ritual input { font: inherit; font-size: 1rem; padding: 13px 17px; border: none; border-radius: 16px; background: var(--card); color: var(--ink); width: min(85vw, 380px); text-align: center; }
+  #ritual .r-skip { position: absolute; top: 20px; left: 20px; font: inherit; font-size: 0.8rem; color: var(--muted); background: none; border: none; cursor: pointer; }
+  #breathc { width: 130px; height: 130px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, var(--accent), var(--accent-deep)); box-shadow: 0 0 60px rgba(139,127,245,0.5); transition: transform 4s ease-in-out; }
+  .exp-star { outline: 2px solid var(--coral) !important; }
+
   #toast { position: fixed; bottom: 92px; left: 50%; transform: translateX(-50%); background: var(--card-2); color: var(--ink); border: 1px solid var(--hair); padding: 11px 20px; border-radius: 999px; font-size: 0.9rem; font-weight: 650; box-shadow: 0 10px 30px rgba(0,0,0,0.35); opacity: 0; pointer-events: none; z-index: 9; transition: opacity 0.25s; max-width: 88vw; text-align: center; direction: rtl; }
   #toast.show { opacity: 1; }
   #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 8; }
@@ -246,6 +257,7 @@
       <div class="hdate" id="hdate"></div>
     </div>
     <span class="pilot-tag">פיילוט</span>
+    <button id="bigtext" aria-label="הגדלת טקסט" style="font:inherit;font-weight:800;background:var(--card);border:1px solid var(--hair);color:var(--ink-2);border-radius:12px;padding:6px 11px;cursor:pointer">Aa</button>
   </header>
 
   <div class="bento" data-v="home">
@@ -276,6 +288,20 @@
       <div class="cap" id="f-ratings"></div>
     </button>
   </div>
+
+  <section class="card" data-v="home" id="sec-moment" style="border:1px solid var(--accent)">
+    <h2 id="mo-title"></h2>
+    <p class="sub" id="mo-text" style="margin-bottom:12px"></p>
+    <div class="row">
+      <button class="pill solid" id="mo-action"></button>
+      <button class="pill" id="mo-ritual" style="display:none"></button>
+    </div>
+  </section>
+
+  <section class="card" data-v="home" id="sec-exp" hidden>
+    <h2>🧪 הניסוי שלי השבוע</h2>
+    <div id="exp-body"></div>
+  </section>
 
   <section class="card" data-v="home" id="sec-why" style="border:1px solid var(--accent)">
     <h2>🎯 הלמה שלי</h2>
@@ -387,6 +413,18 @@
     <div id="ideas"></div>
   </section>
 
+  <section class="card" data-v="ideas" id="sec-media">
+    <h2>🎵 המדיה שלי</h2>
+    <p class="sub">שירים למדיטציה ולטקס הערב · תמונות מוטיבציה שיופיעו ברקע האפירמציה</p>
+    <div class="row">
+      <button class="pill solid" id="media-audio">🎵 העלאת שיר</button>
+      <button class="pill solid" id="media-image">🖼 העלאת תמונה</button>
+      <input type="file" id="media-file-a" accept="audio/*" hidden>
+      <input type="file" id="media-file-i" accept="image/*" hidden>
+    </div>
+    <div id="media-list" style="margin-top:10px"></div>
+  </section>
+
   <section class="card" data-v="ideas">
     <h2>הצעת רעיון</h2>
     <p class="sub">משהו שעבד לך? הוסף — ובסוף הפיילוט זה יגיע אלינו עם הייצוא</p>
@@ -415,6 +453,15 @@
     <div id="sheet-body"></div>
   </div>
 </div>
+<div id="ritual" hidden>
+  <button class="r-skip" id="r-skip">דילוג ✕</button>
+  <div class="r-eyebrow" id="r-eyebrow"></div>
+  <div class="r-main" id="r-main"></div>
+  <div id="r-extra"></div>
+  <div class="r-sub" id="r-sub"></div>
+  <button class="pill solid" id="r-next" style="font-size:1rem;padding:12px 34px"></button>
+</div>
+
 <div id="toast" role="status" aria-live="polite"></div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 
@@ -450,6 +497,8 @@ const SEED_IDEAS = [
   { id: 'n-meditate', title: 'עשר דקות תרגול קשוב ביום', how: 'מדיטציה מודרכת קצרה, בשעה קבועה — עוגן לפני ארוחת צהריים או ערב.', why: 'ניהול לחץ והרפיה הם מהמרכיבים השכיחים בהתערבויות שינה אפקטיביות (g=-0.54).', source: 'Murawski, Sleep Med Rev 2017', pillar: 'mind' },
   { id: 'd-limit', title: 'תקרת זמן מסך יומית', how: 'קבעו יעד (למשל 3 שעות) והפעילו מגבלה ברווחה דיגיטלית / זמן מסך — המכשיר אוכף בשבילכם.', why: 'צריכת מסכים בערב היא הדלק המרכזי של דחיינות שינה; מגבלה אוטומטית מחליפה כוח רצון.', source: 'SLEEP 2026; עיצוב סביבה (הרגלים אטומיים)', pillar: 'digital' },
   { id: 'd-stream', title: 'סטרימינג עם קו סיום מראש', how: 'לפני שמתחילים לצפות — קובעים שעת עצירה. "עוד פרק" מוכרע מראש, לא ברגע החולשה.', why: 'ההחלטה מראש (כוונת יישום) מנצחת את מנגנון הסיפוק המיידי של הפרק הבא.', source: 'MCII, Psychology & Health 2020', pillar: 'digital' },
+  { id: 's-senior-move', title: 'תנועה עדינה וקצרה (מותאם 60+)', how: 'הליכה קלה, טאי צ׳י או יוגה עדינה — עד 30 דקות, פעמיים בשבוע. לא צריך יותר.', why: 'בגיל 60+ דווקא תוכניות קצרות ועדינות שיפרו שינה יותר מאימונים אינטנסיביים.', source: 'Li et al., Frontiers in Medicine 2025 (מטא-אנליזה, 26 ניסויים)', pillar: 'move' },
+  { id: 's-nap30', title: 'תנומת צהריים עד 30 דקות', how: 'טיימר ל-20–30 דקות, מוקדם אחר הצהריים — לא אחרי 16:00.', why: 'תנומה קצרה משפרת ערנות; מעל שעה קשורה לסיכונים בריאותיים ופוגעת בלילה.', source: 'Umbrella review, Public Health Reviews 2026', pillar: 'sleep' },
 ];
 const DEFAULT_DATA = { ideas: SEED_IDEAS, feedback: [], hidden: [], habits: [], settings: {}, signals: [] };
 function loadD() {
@@ -599,6 +648,7 @@ const ACH = [
   { id: 'comeback', e: '💪', n: 'לא מפספסים פעמיים', won: () => DATA.habits.some(h => hasComeback(h.history)), prog: () => [DATA.habits.some(h => hasComeback(h.history)) ? 1 : 0, 1, 'חזרות'], deep: 'ההישג החשוב ביותר: אשמה על פספוס מזינה את הפספוס הבא. מי שחוזר למחרת ניצח את מנגנון הכישלון המרכזי.' },
   { id: 'signal-3', e: '📿', n: 'שלוש בחירות ברצף', won: () => bestSigRun() >= 3, prog: () => [Math.min(3, bestSigRun()), 3, 'ימים ברצף'], deep: 'בחירה יישומית היא הצהרת בעלות זעירה: "זה קרה כי אני בחרתי". שלושה ימים ברצף של אותה בחירה — הצהרה שהפכה לדפוס, ודפוס שהופך לזהות.' },
   { id: 'researcher', e: '🔬', n: 'חוקר של עצמי', won: hasFinding, prog: () => [hasFinding() ? 1 : 0, 1, 'ממצאים'], deep: 'שיא הגשר: כבר לא "מומחים אומרים" אלא "הנתונים שלי מראים".' },
+  { id: 'exp-1', e: '🧪', n: 'ניסיתי על עצמי', won: () => (DATA.settings.expLog || []).length >= 1, prog: () => [Math.min(1, (DATA.settings.expLog || []).length), 1, 'ניסויים'], deep: 'ההבדל בין לקרוא מחקר לחיות אותו שבוע — זה ההבדל בין ידע לחוכמה. כל ניסוי שהושלם, גם כזה ש"לא עבד", מלמד אותך מה נכון לגוף שלך.' },
   { id: 'why-set', e: '🎯', n: 'יש לי למה', won: () => !!(DATA.settings.why || '').trim(), prog: () => [(DATA.settings.why || '').trim() ? 1 : 0, 1, 'למה מוגדר'], deep: 'ניטשה: "מי שיש לו למה — יסתדר עם כמעט כל איך". הלמה הוא העוגן שמחזיק את ההרגלים בימים הקשים; מרגע שהוגדר, כל סימון הוא הצבעה בשבילו.' },
 ];
 const LEVELS = [[0, 'מתחילים הלילה'], [60, 'בונה הרגלים'], [150, 'שומר הלילה'], [300, 'קצב יציב'], [500, 'אלוף הרצפים'], [800, 'אמן השינה'], [1200, 'אגדת שינה 🌙']];
@@ -606,7 +656,8 @@ function points() {
   const checks = DATA.habits.reduce((a, h) => a + Object.keys(h.history).length, 0);
   const proven = visibleIdeas().filter(i => { const s = stats(i.id); return s.n >= 3 && s.avg >= 4; }).length;
   const studyR = Object.keys(DATA.settings.studyRatings || {}).length;
-  return DATA.feedback.length * 10 + checks * 15 + DATA.signals.length * 5 + studyR * 5 + proven * 50 + ACH.filter(a => a.won()).length * 25;
+  const exps = (DATA.settings.expLog || []).length;
+  return DATA.feedback.length * 10 + checks * 15 + DATA.signals.length * 5 + studyR * 5 + exps * 30 + proven * 50 + ACH.filter(a => a.won()).length * 25;
 }
 
 /* ---- Sheet ---- */
@@ -844,9 +895,11 @@ function renderWhy() {
     <div class="affirm-text" style="font-size:1.2rem;margin:6px 0 12px">${w}</div>
     <div class="row">
       <button class="pill solid" id="why-remind">⏰ תזכורת יומית עם הלמה</button>
+      <button class="pill" id="why-wall">🖼 טפט למסך הנעילה</button>
       <button class="ghost" id="why-edit">עריכה</button>
       <span class="thanks" id="why-msg"></span>
     </div>`;
+  box.querySelector('#why-wall').onclick = genWallpaper;
   box.querySelector('#why-edit').onclick = async () => { await api('/api/settings', { why: '' }); refresh(); };
   box.querySelector('#why-remind').onclick = () => {
     const time = prompt('באיזו שעה להזכיר לך את הלמה, כל יום?', DATA.settings.whyReminderTime || '21:00');
@@ -905,28 +958,28 @@ const PILLARS = [
   { p: 'digital', e: '📱', n: 'דיגיטל' },
 ];
 const SIGNALS = [
-  { key: 'noscreen', e: '📵', l: 'שעה בלי מסך לפני השינה', pillar: 'sleep' },
-  { key: 'easysleep', e: '😴', l: 'נרדמתי בקלות', pillar: 'sleep' },
-  { key: 'fresh', e: '☀️', l: 'קמתי רענן', pillar: 'sleep' },
-  { key: 'darkroom', e: '🌑', l: 'חדר חשוך וקריר', pillar: 'sleep' },
-  { key: 'earlycoffee', e: '☕', l: 'קפה אחרון מוקדם', pillar: 'sleep' },
-  { key: 'ritual', e: '🕯️', l: 'עשיתי טקס ערב', pillar: 'sleep' },
-  { key: 'steps', e: '🚶', l: 'הליכה / 8000+ צעדים', pillar: 'move' },
-  { key: 'workout', e: '🏋️', l: 'אימון או תנועה מכוונת', pillar: 'move' },
-  { key: 'mindbody', e: '🧎', l: 'יוגה / טאי צ׳י / מתיחות', pillar: 'move' },
-  { key: 'daylight', e: '🌿', l: 'הייתי בחוץ באור יום', pillar: 'move' },
-  { key: 'earlydinner', e: '🍽️', l: 'ארוחה אחרונה מוקדם', pillar: 'food' },
-  { key: 'water', e: '🚰', l: 'שתיתי מים לאורך היום', pillar: 'food' },
-  { key: 'nosugar', e: '🍬', l: 'יום בלי מתוק מעובד', pillar: 'food' },
-  { key: 'mindfuleat', e: '🥗', l: 'אכילה רגועה, בלי מסך', pillar: 'food' },
-  { key: 'screenlimit', e: '⏳', l: 'עמדתי ביעד זמן המסך', pillar: 'digital' },
-  { key: 'streamstop', e: '📺', l: 'סטרימינג נעצר בזמן שקבעתי', pillar: 'digital' },
-  { key: 'nophonewake', e: '🌅', l: 'בוקר בלי טלפון (30 דק׳)', pillar: 'digital' },
-  { key: 'socialbatch', e: '📵', l: 'רשתות רק בחלונות קבועים', pillar: 'digital' },
-  { key: 'meditate', e: '🧘', l: 'מדיטציה / תרגול קשוב', pillar: 'mind' },
-  { key: 'breath', e: '🌬️', l: 'תרגיל נשימה', pillar: 'mind' },
-  { key: 'gratitude', e: '📓', l: 'רגע הכרת תודה', pillar: 'mind' },
-  { key: 'calm', e: '🔕', l: 'זמן שקט בלי גירויים', pillar: 'mind' },
+  { key: 'noscreen', e: '📵', l: 'שעה בלי מסך לפני השינה', pillar: 'sleep', w: 'אור מסך בערב דוחה את שעון השינה — קשר מנה-תגובה מוכח' },
+  { key: 'easysleep', e: '😴', l: 'נרדמתי בקלות', pillar: 'sleep', w: 'הירדמות קלה היא סימן שהעומס הצירקדי מאוזן' },
+  { key: 'fresh', e: '☀️', l: 'קמתי רענן', pillar: 'sleep', w: 'רעננות בוקר היא מדד-העל של איכות הלילה' },
+  { key: 'darkroom', e: '🌑', l: 'חדר חשוך וקריר', pillar: 'sleep', w: 'מעל 24° הלב עובד קשה יותר בשינה (BMC Medicine)' },
+  { key: 'earlycoffee', e: '☕', l: 'קפה אחרון מוקדם', pillar: 'sleep', w: 'קפאין 6 שעות לפני שינה גוזל כשעה נמדדת (Drake 2013)' },
+  { key: 'ritual', e: '🕯️', l: 'עשיתי טקס ערב', pillar: 'sleep', w: 'טקס קבוע מאותת למוח: מתחילים לכבות' },
+  { key: 'steps', e: '🚶', l: 'הליכה / 8000+ צעדים', pillar: 'move', w: 'תנועה סדירה: ‎−2.19 נק׳ PSQI — ההרגל מס׳ 1 (22 ניסויים)' },
+  { key: 'workout', e: '🏋️', l: 'אימון או תנועה מכוונת', pillar: 'move', w: 'גם 20 דקות היום משפרות את תחושת הלילה' },
+  { key: 'mindbody', e: '🧎', l: 'יוגה / טאי צ׳י / מתיחות', pillar: 'move', w: 'גוף-נפש: מגודלי האפקט הגדולים שנמדדו (SMD 0.87)' },
+  { key: 'daylight', e: '🌿', l: 'הייתי בחוץ באור יום', pillar: 'move', w: 'אור יום מכייל את השעון — הירדמות מוקדמת ושינה עמוקה' },
+  { key: 'earlydinner', e: '🍽️', l: 'ארוחה אחרונה מוקדם', pillar: 'food', w: 'ארוחה צמודה לשינה קיצרה שינה נמדדת (2026)' },
+  { key: 'water', e: '🚰', l: 'שתיתי מים לאורך היום', pillar: 'food', w: 'הידרציה ביום ופחות בערב = פחות יקיצות' },
+  { key: 'nosugar', e: '🍬', l: 'יום בלי מתוק מעובד', pillar: 'food', w: 'סוכר בערב מקפיץ גלוקוז — ושובר שינה עמוקה' },
+  { key: 'mindfuleat', e: '🥗', l: 'אכילה רגועה, בלי מסך', pillar: 'food', w: 'אכילה רגועה = עיכול רגוע = לילה רגוע' },
+  { key: 'screenlimit', e: '⏳', l: 'עמדתי ביעד זמן המסך', pillar: 'digital', w: 'מגבלה אוטומטית מחליפה כוח רצון מדולדל' },
+  { key: 'streamstop', e: '📺', l: 'סטרימינג נעצר בזמן שקבעתי', pillar: 'digital', w: '"עוד פרק" שהוכרע מראש — כוונת יישום מנצחת דחיינות' },
+  { key: 'nophonewake', e: '🌅', l: 'בוקר בלי טלפון (30 דק׳)', pillar: 'digital', w: 'בוקר בלי טלפון = הדופמין הראשון בשליטתך' },
+  { key: 'socialbatch', e: '📵', l: 'רשתות רק בחלונות קבועים', pillar: 'digital', w: 'חלונות קבועים מפרקים את לולאת הגלילה האינסופית' },
+  { key: 'meditate', e: '🧘', l: 'מדיטציה / תרגול קשוב', pillar: 'mind', w: 'הרפיה — מרכיב ליבה בהתערבויות המוכחות (g=−0.54)' },
+  { key: 'breath', e: '🌬️', l: 'תרגיל נשימה', pillar: 'mind', w: 'נשיפה ארוכה מדליקה את המערכת הפאראסימפתטית' },
+  { key: 'gratitude', e: '📓', l: 'רגע הכרת תודה', pillar: 'mind', w: 'הכרת תודה לפני שינה קשורה להירדמות מהירה יותר' },
+  { key: 'calm', e: '🔕', l: 'זמן שקט בלי גירויים', pillar: 'mind', w: 'שקט מגירויים מוריד את רמת העוררות לקראת הלילה' },
 ];
 
 /* ציון הרגל 0–100 לעמוד — נוסחה שקופה */
@@ -994,13 +1047,16 @@ function renderPillars() {
       b.className = 'sig' + (on ? ' on' : '');
       b.setAttribute('aria-pressed', on);
       b.innerHTML = `<span class="se">${s.e}</span><span class="sl">${s.l}</span>${st >= 2 ? `<span class="sk">🔥×${st}</span>` : ''}`;
+      if (activeExp()?.signalKey === s.key) b.classList.add('exp-star');
       b.onclick = async () => {
         const r = await api('/api/signals/toggle', { key: s.key, date: todayISO() });
         if (r.on) {
           const ns = sigStreak(s.key) + 1;
           const w = myWhy();
+          const rot = DATA.signals.length % 3;
           const msg = ns >= 3 ? `🔥 בחירה ${ns} ברצף — ${s.l}!`
-            : (w && DATA.signals.length % 3 === 2) ? `🎯 בחירה יישומית בשביל: ${w}`
+            : rot === 0 ? `💡 ${s.w}`
+            : (w && rot === 2) ? `🎯 בחירה יישומית בשביל: ${w}`
             : `${s.e} בחירה יישומית נרשמה · +5 נק׳`;
           toast(msg); confetti(); vibrate(25);
         }
@@ -1231,11 +1287,15 @@ function renderStudies() {
         <p class="src"></p>
         <div class="row"><span class="q" style="font-size:0.78rem;color:var(--ink-2)">כמה זה מדבר אליך?</span>
           <div class="rate open">${rateButtons()}</div><span class="thanks"></span></div>
+        <div class="row" style="margin-top:8px"><button class="pill" data-try>🧪 נסה את זה שבוע</button></div>
       </div>`;
     d.querySelector('.ititle2').textContent = r.title;
     d.querySelector('.how').textContent = r.summary;
     d.querySelector('.why').textContent = '💡 ' + r.insight;
     d.querySelector('.src').textContent = `${r.date} · ${r.evidence} · ${r.source}`;
+    const tryB = d.querySelector('[data-try]');
+    if (activeExp()) { tryB.disabled = true; tryB.textContent = '🧪 יש ניסוי פעיל השבוע'; tryB.style.opacity = 0.5; }
+    else tryB.onclick = () => startExperiment(r);
     for (const b of d.querySelectorAll('.rate button')) {
       b.onclick = async () => {
         const next = { ...studyRatings(), [r.date]: +b.dataset.v };
@@ -1251,10 +1311,280 @@ function renderStudies() {
   }
 }
 
+/* ---- מדיה אישית: שירים ותמונות (IndexedDB — נשאר במכשיר) ---- */
+function idbOpen() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('habits-media', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('files', { keyPath: 'id' });
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function mediaAll() {
+  try {
+    const db = await idbOpen();
+    return await new Promise(res => {
+      const q = db.transaction('files').objectStore('files').getAll();
+      q.onsuccess = () => res(q.result || []);
+      q.onerror = () => res([]);
+    });
+  } catch { return []; }
+}
+async function mediaPut(file, kind) {
+  if (file.size > 15e6) { toast('⚠ קובץ גדול מדי (עד 15MB)'); return; }
+  const db = await idbOpen();
+  const buf = await file.arrayBuffer();
+  db.transaction('files', 'readwrite').objectStore('files').put({ id: 'm' + Date.now(), kind, name: file.name, type: file.type, buf });
+  toast(kind === 'audio' ? '🎵 השיר נשמר — ינוגן בטקס הערב' : '🖼 התמונה נשמרה — תופיע ברקע האפירמציה');
+  confetti(); renderMedia();
+}
+async function renderMedia() {
+  const list = await mediaAll();
+  const el = $('#media-list');
+  if (!el) return;
+  el.innerHTML = list.length ? list.map(m => `
+    <div class="commrow"><span>${m.kind === 'audio' ? '🎵' : '🖼'}</span><span class="cn">${m.name}</span>
+    <button class="ghost" data-del="${m.id}">מחיקה</button></div>`).join('')
+    : '<p class="sub" style="margin:0">עוד אין מדיה — הקבצים נשמרים רק במכשיר שלך.</p>';
+  for (const b of el.querySelectorAll('[data-del]')) {
+    b.onclick = async () => {
+      const db = await idbOpen();
+      db.transaction('files', 'readwrite').objectStore('files').delete(b.dataset.del);
+      renderMedia();
+    };
+  }
+  // תמונת מוטיבציה ברקע האפירמציה
+  const imgs = list.filter(m => m.kind === 'image');
+  if (imgs.length) {
+    const pick = imgs[Math.floor(Date.now() / 86400000) % imgs.length];
+    const url = URL.createObjectURL(new Blob([pick.buf], { type: pick.type }));
+    const card = $('#affirm');
+    card.style.backgroundImage = `linear-gradient(rgba(13,15,25,0.78), rgba(13,15,25,0.82)), url(${url})`;
+    card.style.backgroundSize = 'cover';
+    card.style.backgroundPosition = 'center';
+  }
+}
+$('#media-audio').onclick = () => $('#media-file-a').click();
+$('#media-image').onclick = () => $('#media-file-i').click();
+$('#media-file-a').onchange = e => { if (e.target.files[0]) mediaPut(e.target.files[0], 'audio'); e.target.value = ''; };
+$('#media-file-i').onchange = e => { if (e.target.files[0]) mediaPut(e.target.files[0], 'image'); e.target.value = ''; };
+let ritualAudio = null;
+async function playRitualAudio() {
+  const list = (await mediaAll()).filter(m => m.kind === 'audio');
+  if (!list.length) return;
+  const pick = list[Math.floor(Date.now() / 86400000) % list.length];
+  ritualAudio = new Audio(URL.createObjectURL(new Blob([pick.buf], { type: pick.type })));
+  ritualAudio.loop = true; ritualAudio.volume = 0.6;
+  ritualAudio.play().catch(() => {});
+}
+function stopRitualAudio() { if (ritualAudio) { ritualAudio.pause(); ritualAudio = null; } }
+
+/* ---- מצב טקסט גדול (נגישות) ---- */
+function applyBigText() {
+  const on = !!DATA.settings.bigText;
+  document.documentElement.style.fontSize = on ? '119%' : '';
+  $('#bigtext').style.background = on ? 'var(--accent-soft)' : 'var(--card)';
+  $('#bigtext').style.color = on ? 'var(--accent)' : 'var(--ink-2)';
+}
+$('#bigtext').onclick = async () => {
+  await api('/api/settings', { bigText: !DATA.settings.bigText });
+  DATA = await api('/api/data');
+  applyBigText();
+  toast(DATA.settings.bigText ? 'Aa טקסט מוגדל — נוח יותר לעיניים' : 'טקסט רגיל');
+};
+
+/* ---- מחולל טפט: הלמה על מסך הנעילה ---- */
+function genWallpaper() {
+  const W = 1080, H = 1920;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const c = cv.getContext('2d');
+  const g = c.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#101b30'); g.addColorStop(0.6, '#0a0f1e'); g.addColorStop(1, '#07080d');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  for (let i = 0; i < 140; i++) {
+    c.beginPath();
+    c.arc(((i * 137.5) % 360) / 360 * W, ((i * 97.3) % 100) / 100 * H * 0.75, 1 + (i % 3), 0, 7);
+    c.fillStyle = `rgba(255,255,255,${0.25 + (i % 6) / 10})`; c.fill();
+  }
+  c.beginPath(); c.arc(W * 0.78, H * 0.14, 90, 0, 7); c.fillStyle = '#e8e4f5'; c.fill();
+  c.beginPath(); c.arc(W * 0.74, H * 0.125, 82, 0, 7); c.fillStyle = '#101b30'; c.fill();
+  const wrapText = (txt, y, size, weight, color, lh) => {
+    c.font = `${weight} ${size}px system-ui, sans-serif`;
+    c.fillStyle = color; c.textAlign = 'center'; c.direction = 'rtl';
+    const words = txt.split(' ');
+    let line = '', yy = y;
+    for (const w of words) {
+      if (c.measureText(line + ' ' + w).width > W * 0.8 && line) { c.fillText(line, W / 2, yy); yy += lh; line = w; }
+      else line = line ? line + ' ' + w : w;
+    }
+    c.fillText(line, W / 2, yy);
+    return yy + lh;
+  };
+  c.fillStyle = 'rgba(139,127,245,0.95)';
+  c.font = '600 34px system-ui'; c.textAlign = 'center';
+  c.fillText('ה ל מ ה   ש ל י', W / 2, H * 0.4);
+  let y = wrapText(myWhy() || 'אני אחראי על ההרגלים שלי', H * 0.46, 72, '800', '#f1f2f7', 96);
+  const aff = AFFIRMATIONS[Math.floor(Date.now() / 86400000) % AFFIRMATIONS.length];
+  wrapText(aff, y + 80, 44, '300', 'rgba(185,189,204,0.9)', 62);
+  cv.toBlob(b => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = 'הלמה-שלי-טפט.png'; a.click();
+    toast('🖼 הטפט ירד — הגדר אותו כמסך נעילה ותראה את הלמה 100 פעמים ביום');
+  }, 'image/png');
+}
+
+/* ---- רגע האמת: קוביית ידע חכמה לפי שעת היום ---- */
+const MOMENTS = [
+  { from: 5, to: 11, t: '☀️ רגע הבוקר', x: '10–15 דקות אור יום עכשיו מכיילות את הלילה הבא — האפקט הצירקדי החזק ביותר שיש לך.', sig: 'daylight', ritual: 'morning', rl: '🌅 טקס בוקר (60 שנ׳)' },
+  { from: 11, to: 15, t: '☕ חלון הקפה נסגר', x: 'קפה אחרון עכשיו = שינה שלמה הלילה. אחרי 6 שעות לפני השינה — כל כוס גוזלת שינה נמדדת.', sig: 'earlycoffee' },
+  { from: 15, to: 19, t: '🚶 חלון התנועה', x: 'גם 20 דקות תנועה עכשיו משפרות את הלילה — ההרגל עם הראיות החזקות ביותר.', sig: 'steps' },
+  { from: 19, to: 22, t: '📵 שעת המסכים', x: 'עמעום אור ומסכים עכשיו = הירדמות קלה. הקשר הוא מנה-תגובה: כל דקה נחסכת עוזרת.', sig: 'noscreen', ritual: 'evening', rl: '🌙 טקס ערב (90 שנ׳)' },
+  { from: 22, to: 5, t: '🌙 הלילה כאן', x: 'זה הרגע לסגור את היום בכוונה — הבחירות של הערב הן ההצבעות החזקות ביותר.', sig: 'ritual', ritual: 'evening', rl: '🌙 טקס ערב (90 שנ׳)' },
+];
+function renderMoment() {
+  const h = new Date().getHours();
+  const m = MOMENTS.find(x => x.from <= x.to ? (h >= x.from && h < x.to) : (h >= x.from || h < x.to));
+  const s = SIGNALS.find(x => x.key === m.sig);
+  $('#mo-title').textContent = m.t;
+  $('#mo-text').textContent = m.x;
+  const on = sigDates(m.sig).has(todayISO());
+  const a = $('#mo-action');
+  a.textContent = on ? `✓ ${s.l}` : `${s.e} ${s.l} — סמן`;
+  a.classList.toggle('done', on);
+  a.onclick = async () => {
+    const r = await api('/api/signals/toggle', { key: m.sig, date: todayISO() });
+    if (r.on) { toast(`💡 ${s.w}`); confetti(); vibrate(25); }
+    refresh();
+  };
+  const rb = $('#mo-ritual');
+  if (m.ritual) { rb.style.display = ''; rb.textContent = m.rl; rb.onclick = () => startRitual(m.ritual); }
+  else rb.style.display = 'none';
+}
+
+/* ---- הניסוי שלי השבוע: לחיות מחקר, לא לקרוא אותו ---- */
+const activeExp = () => DATA.settings.experiment || null;
+const expDay = ex => Math.min(7, Math.floor((new Date(todayISO()) - new Date(ex.startedAt)) / 86400000) + 1);
+async function startExperiment(r) {
+  const t = themeOf(r);
+  await api('/api/settings', { experiment: { studyDate: r.date, title: r.title, insight: r.insight, signalKey: t.signals[0], startedAt: todayISO() } });
+  toast('🧪 הניסוי יצא לדרך — שבוע אחד, הנתונים ישפטו');
+  confetti(true); vibrate([40, 60, 40]);
+  showView('home'); refresh();
+}
+async function finishExperiment(verdictOnly) {
+  const ex = activeExp();
+  if (!ex) return;
+  const days = lastNDates(7).filter(d => sigDates(ex.signalKey).has(d) && d >= ex.startedAt).length;
+  const worked = days >= 4;
+  const log = [...(DATA.settings.expLog || []), { ...ex, endedAt: todayISO(), days, worked }];
+  await api('/api/settings', { experiment: null, expLog: log });
+  openSheet(`
+    <div class="sh-head"><span class="sh-emoji">${worked ? '🏆' : '🔬'}</span>
+      <div><div class="sh-title">${worked ? 'עבד עליך!' : 'ניסוי הושלם'}</div>
+      <div class="sh-status">${ex.title}</div></div></div>
+    <p class="sh-deep">${days} מתוך 7 ימים בחרת ב"${SIGNALS.find(s => s.key === ex.signalKey)?.l}". ${worked
+      ? 'הנתונים שלך אומרים: זה עובד עליך. השלב הבא — להפוך את זה להרגל קבוע עם כוונת יישום.'
+      : 'לא הפעם — וזה ידע יקר בדיוק כמו הצלחה: עכשיו אתה יודע שזה לא הדרך שלך, ואפשר לנסות ניסוי אחר. לא מפספסים פעמיים 💪'}</p>`);
+  refresh();
+}
+function renderExp() {
+  const ex = activeExp();
+  $('#sec-exp').hidden = !ex;
+  if (!ex) return;
+  const d = expDay(ex);
+  const done = lastNDates(7).filter(x => sigDates(ex.signalKey).has(x) && x >= ex.startedAt).length;
+  $('#exp-body').innerHTML = `
+    <div style="font-weight:750;margin-bottom:4px">${ex.title}</div>
+    <p class="sub" style="margin:0 0 8px">💡 ${ex.insight}</p>
+    <div class="xpbar"><div style="width:${Math.round(d / 7 * 100)}%"></div></div>
+    <div class="xpnext">יום ${d}/7 · ${done} בחירות · הבחירה המסומנת בכתום היא הניסוי שלך</div>
+    <div class="row">${d >= 7 ? '<button class="pill solid" id="exp-finish">🏁 פסק הדין מהנתונים</button>' : ''}
+      <button class="ghost" id="exp-stop">ביטול הניסוי</button></div>`;
+  const f = $('#exp-finish');
+  if (f) f.onclick = () => finishExperiment();
+  $('#exp-stop').onclick = async () => { if (confirm('לבטל את הניסוי?')) { await api('/api/settings', { experiment: null }); refresh(); } };
+}
+
+/* ---- טקסים: בוקר (60 שנ׳) וערב (90 שנ׳) ---- */
+let R_STEPS = [], R_I = 0;
+function startRitual(kind) {
+  const w = myWhy();
+  if (kind === 'morning') {
+    R_STEPS = [
+      { e: 'טקס בוקר · 1/3', m: AFFIRMATIONS[Math.floor(Date.now() / 86400000) % AFFIRMATIONS.length], s: 'קרא לאט. נשום.', b: 'המשך' },
+      { e: 'טקס בוקר · 2/3', m: w || 'אני אחראי על ההרגלים שלי ועל השינוי שלי.', s: 'הלמה שלך. בשביל זה.', b: 'המשך' },
+      { e: 'טקס בוקר · 3/3', m: 'כוונה אחת להיום:', input: true, s: 'קטנה. ברורה. שלך.', b: 'יוצא לדרך ☀️',
+        done: async v => { if (v) await api('/api/settings', { todayIntent: { date: todayISO(), text: v } }); toast('☀️ הבוקר נפתח בכוונה'); confetti(); } },
+    ];
+  } else {
+    const unmarked = PILLARS.map(pl => SIGNALS.find(s => s.pillar === pl.p && !sigDates(s.key).has(todayISO()))).filter(Boolean).slice(0, 5);
+    R_STEPS = [
+      { e: 'טקס ערב · 1/3', m: 'מה בחרת היום?', sigs: unmarked, s: unmarked.length ? 'הקש על מה שקרה — או פשוט המשך' : 'הכול כבר סומן — יום מלא!', b: 'המשך' },
+      { e: 'טקס ערב · 2/3', m: '', breath: true, s: 'שאיפה 4 · החזקה 7 · נשיפה 8', b: 'עוד סבב / המשך' },
+      { e: 'טקס ערב · 3/3', m: 'היום עשה את שלו. עכשיו — הגוף יודע את הדרך.', s: 'לילה טוב 🌙', b: 'סוגרים את היום',
+        done: async () => { if (!sigDates('ritual').has(todayISO())) await api('/api/signals/toggle', { key: 'ritual', date: todayISO() }); toast('🌙 טקס ערב הושלם · +5'); confetti(); } },
+    ];
+  }
+  R_I = 0;
+  $('#ritual').hidden = false;
+  renderRitualStep();
+}
+let breathTimer = null;
+function renderRitualStep() {
+  const st = R_STEPS[R_I];
+  $('#r-eyebrow').textContent = st.e;
+  $('#r-main').textContent = st.m;
+  $('#r-sub').textContent = st.s;
+  $('#r-next').textContent = st.b;
+  const ex = $('#r-extra');
+  ex.innerHTML = '';
+  clearInterval(breathTimer);
+  if (st.input) ex.innerHTML = '<input id="r-input" maxlength="80" placeholder="למשל: יוצא ל-10 דקות אור אחרי הקפה">';
+  if (st.sigs) {
+    const g = document.createElement('div');
+    g.className = 'sigs';
+    g.style.maxWidth = '420px';
+    for (const s of st.sigs) {
+      const b = document.createElement('button');
+      b.className = 'sig';
+      b.innerHTML = `<span class="se">${s.e}</span><span class="sl">${s.l}</span>`;
+      b.onclick = async () => { await api('/api/signals/toggle', { key: s.key, date: todayISO() }); b.classList.add('on'); b.disabled = true; vibrate(20); };
+      g.appendChild(b);
+    }
+    ex.appendChild(g);
+  }
+  if (st.breath) {
+    playRitualAudio();
+    ex.innerHTML = '<div id="breathc"></div>';
+    const c = $('#breathc');
+    let phase = 0;
+    const phases = [['שאיפה…', 4000, 'scale(1.55)'], ['החזקה…', 7000, 'scale(1.55)'], ['נשיפה ארוכה…', 8000, 'scale(1)']];
+    const step = () => {
+      const [txt, ms, tf] = phases[phase % 3];
+      $('#r-main').textContent = txt;
+      if (!reduceMotion()) c.style.transitionDuration = ms + 'ms', c.style.transform = tf;
+      phase++;
+      breathTimer = setTimeout(step, ms);
+    };
+    step();
+  }
+}
+$('#r-next').onclick = async () => {
+  const st = R_STEPS[R_I];
+  clearTimeout(breathTimer);
+  if (st.done) await st.done($('#r-input')?.value?.trim());
+  R_I++;
+  if (R_I >= R_STEPS.length) { $('#ritual').hidden = true; stopRitualAudio(); refresh(); }
+  else renderRitualStep();
+};
+$('#r-skip').onclick = () => { clearTimeout(breathTimer); stopRitualAudio(); $('#ritual').hidden = true; };
+
 async function refresh() {
   DATA = await api('/api/data');
   await commSync();
-  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderPillars(); renderResearch(); renderDailyResearch(); renderCommunity(); renderWhy(); renderSummaries();
+  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderPillars(); renderResearch(); renderDailyResearch(); renderCommunity(); renderWhy(); renderSummaries(); renderMoment(); renderExp(); renderMedia(); applyBigText();
   $('#avatar').textContent = DATA.settings.avatar || '🌙';
   showView(VIEW);
   checkAchievements();
