@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>דשבורד המחקר — שינה</title>
+<style>
+  :root {
+    --bg-top: #101b30; --bg-bottom: #07080d;
+    --card: #1a1d26; --card-2: #21242f; --ink: #f1f2f7; --ink-2: #b9bdcc; --muted: #868da0;
+    --accent: #8b7ff5; --accent-deep: #5b4ee0; --accent-soft: rgba(139,127,245,0.16);
+    --coral: #ff8a66; --good: #3ecf9a; --good-soft: rgba(62,207,154,0.14); --hair: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: var(--ink);
+    background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom) 700px) fixed;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.55;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 30px 18px 70px; }
+  header h1 { font-size: clamp(1.6rem, 4vw, 2.3rem); margin: 0; letter-spacing: -0.02em; }
+  header p { color: var(--ink-2); margin: 6px 0 0; font-size: 0.95rem; }
+  .eyebrow { font-size: 0.72rem; letter-spacing: 0.14em; color: var(--accent); font-weight: 700; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 24px 0; }
+  .tile { background: var(--card); border: 1px solid var(--hair); border-radius: 20px; padding: 16px 18px; }
+  .tile .v { font-size: 1.8rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .tile .l { font-size: 0.76rem; color: var(--muted); }
+
+  h2.sec { font-size: 1.15rem; margin: 34px 0 4px; }
+  p.secsub { color: var(--muted); font-size: 0.82rem; margin: 0 0 14px; }
+
+  .winner { background: var(--card); border: 1px solid var(--hair); border-radius: 24px; padding: 20px 22px; margin-bottom: 14px; position: relative; }
+  .winner.first { border-color: var(--accent); box-shadow: 0 0 40px rgba(139,127,245,0.15); }
+  .rank { position: absolute; top: -12px; right: 20px; background: linear-gradient(135deg, var(--accent-deep), var(--accent)); color: #fff; font-weight: 800; border-radius: 99px; padding: 3px 16px; font-size: 0.85rem; }
+  .winner h3 { margin: 6px 0 8px; font-size: 1.15rem; }
+  .winner .effect { display: inline-block; background: var(--good-soft); color: var(--good); border-radius: 99px; padding: 3px 13px; font-size: 0.8rem; font-weight: 700; margin: 0 0 10px 6px; }
+  .winner p { font-size: 0.88rem; color: var(--ink-2); margin: 0 0 8px; }
+  .winner .caveat { font-size: 0.8rem; color: var(--coral); }
+  .winner .src { font-size: 0.72rem; color: var(--muted); }
+
+  .entry { background: var(--card); border: 1px solid var(--hair); border-radius: 20px; padding: 18px 20px; margin-bottom: 12px; }
+  .entry .d { font-size: 0.72rem; color: var(--muted); }
+  .entry .t { font-weight: 750; margin: 3px 0 6px; }
+  .entry .s { font-size: 0.85rem; color: var(--ink-2); margin: 0 0 8px; }
+  .entry .badge { font-size: 0.7rem; background: var(--card-2); color: var(--ink-2); border-radius: 99px; padding: 2px 11px; }
+  .entry .ins { background: var(--accent-soft); border-radius: 14px; padding: 10px 14px; margin: 10px 0 6px; font-size: 0.85rem; }
+  .entry .ins b { color: var(--accent); font-size: 0.7rem; letter-spacing: 0.06em; display: block; margin-bottom: 2px; }
+  .entry .src { font-size: 0.7rem; color: var(--muted); }
+
+  details.claims { background: var(--card); border: 1px solid var(--hair); border-radius: 20px; padding: 16px 20px; }
+  details.claims summary { cursor: pointer; font-weight: 700; font-size: 0.95rem; }
+  .claim { border-top: 1px solid var(--hair); padding: 12px 0; font-size: 0.85rem; color: var(--ink-2); }
+  .claim .vote { font-size: 0.7rem; color: var(--good); font-weight: 700; }
+  .claim .vote.split { color: var(--coral); }
+  .claim a { color: var(--accent); text-decoration: none; font-size: 0.72rem; }
+
+  .links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+  .biglink { flex: 1; min-width: 220px; text-align: center; background: linear-gradient(135deg, var(--accent-deep), var(--accent)); color: #fff; text-decoration: none; font-weight: 750; padding: 16px 22px; border-radius: 20px; }
+  .biglink.alt { background: var(--card); border: 1px solid var(--hair); color: var(--ink); }
+  .note { font-size: 0.75rem; color: var(--muted); margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">מערכת השינה · דשבורד מחקר</div>
+    <h1>🔬 כל המחקר שנעשה עד עכשיו</h1>
+    <p>מתעדכן אוטומטית — החוקר היומי מוסיף תובנה חדשה כל בוקר</p>
+  </header>
+
+  <div class="tiles">
+    <div class="tile"><div class="v" id="c-daily">—</div><div class="l">תובנות מחקר יומיות</div></div>
+    <div class="tile"><div class="v">17</div><div class="l">טענות ששרדו אימות אדברסרי</div></div>
+    <div class="tile"><div class="v">106</div><div class="l">סוכני מחקר במחקר העומק</div></div>
+    <div class="tile"><div class="v">5</div><div class="l">מטא-אנליזות מרכזיות</div></div>
+  </div>
+
+  <h2 class="sec">🏆 מחקר העומק: שלושת ההרגלים המשפיעים ביותר</h2>
+  <p class="secsub">מבוגרים בריאים · דירוג לפי גודל אפקט וחוזק ראיות · כל טענה אומתה ע"י 3 סוכנים אדברסריים</p>
+
+  <div class="winner first">
+    <span class="rank">1</span>
+    <h3>🏃 פעילות גופנית סדירה <span class="effect">‎−2.19 נק' PSQI</span></h3>
+    <p>האפקט הגדול והמשוכפל ביותר: מטא-אנליזה של 22 ניסויים מבוקרים אקראיים (1,806 מבוגרים בריאים) — שיפור איכות שינה של יותר מ-2 נקודות בסולם PSQI, לצד הפחתת חומרת נדודי שינה וישנוניות יומית. תרגול גוף-נפש (טאי צ'י, יוגה) הגיע ל-SMD 0.87 — מגודלי האפקט הגדולים שנמדדו להרגל יומיומי כלשהו.</p>
+    <p class="caveat">⚠ הסתייגות מאומתת: השיפור בעיקר בתחושת השינה; המדידה האובייקטיבית (אקטיגרפיה) מראה שיפור צנוע יותר.</p>
+    <div class="src">Sleep Medicine Reviews · PMC8215288 · PMC8196727 · Kredlow 2015 (66 מחקרים)</div>
+  </div>
+
+  <div class="winner">
+    <span class="rank">2</span>
+    <h3>☕ ניהול קפאין <span class="effect">עד שעה פחות שינה</span></h3>
+    <p>הראיות השליליות החד-משמעיות ביותר: קפאין מקצר את משך השינה, מאריך את ההירדמות, מרבה יקיצות ומפחית שינה עמוקה — וניסוי מבוקר הראה שקפה אפילו 6 שעות לפני השינה גוזל כשעה של שינה נמדדת. ממצא מפתח שאומת פה אחד: אנשים מזלזלים באופן שיטתי בהשפעת הקפאין על עצמם.</p>
+    <div class="src">Drake et al. 2013 (RCT) · PLOS ONE 2022 — אומת 3-0</div>
+  </div>
+
+  <div class="winner">
+    <span class="rank">3</span>
+    <h3>🌙 עמעום אור בערב <span class="effect">מנה-תגובה מובהק</span></h3>
+    <p>אור בהיר בשעות הערב פוגע באיכות השינה ביחס ישר לעוצמה ולמשך החשיפה — ככל שבהיר וממושך יותר, הפגיעה גדולה יותר. לכן עמעום אורות ומסכים בשעות שלפני השינה הוא ההרגל הסביבתי בעל הבסיס החזק ביותר.</p>
+    <p class="caveat">⚠ הסתייגות מאומתת: לאור יום בהיר יש עדויות טובות על שינה מדווחת, אך המדידות האובייקטיביות עדיין לא חד-משמעיות.</p>
+    <div class="src">PLOS ONE 2022 (סקירה) — אומת 3-0</div>
+  </div>
+
+  <div class="winner" style="opacity:0.85">
+    <span class="rank" style="background:var(--card-2);color:var(--ink-2)">מעטפת</span>
+    <h3>🧘 הרפיה, בקרת גירויים וכוונות יישום <span class="effect">g = ‎−0.54</span></h3>
+    <p>התערבויות התנהגותיות משולבות אצל אנשים בריאים משיגות אפקט בינוני — והמרכיבים השכיחים ביעילות ביותר: ניהול לחץ והרפיה, בקרת גירויים (המיטה = שינה), ופעילות גופנית. אלה ה"מעטפת" שמחזיקה את שלושת ההרגלים.</p>
+    <div class="src">Murawski et al., Sleep Medicine Reviews 2017 — אומת 3-0</div>
+  </div>
+
+  <h2 class="sec">🧪 התובנות היומיות של החוקר</h2>
+  <p class="secsub">נטען חי מ-research.json — הרשימה גדלה כל בוקר</p>
+  <div id="daily"></div>
+
+  <h2 class="sec">📋 נספח: הטענות המאומתות</h2>
+  <p class="secsub">כל טענה עברה 3 סוכני-ספקנים שניסו להפריך אותה; ההצבעה מוצגת לצד כל טענה</p>
+  <details class="claims">
+    <summary>15 טענות מרכזיות ממחקר העומק (הצג/הסתר)</summary>
+    <div class="claim">התערבויות קוגניטיביות-התנהגותיות משפרות שינה אצל מבוגרים בריאים באפקט בינוני (g = ‎−0.54 על PSQI). <span class="vote">✓ 3-0</span> <a href="https://www.sciencedirect.com/science/article/pii/S1087079217301661" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">המרכיבים השכיחים בהתערבויות היעילות: ניהול לחץ/הרפיה, בקרת גירויים, היגיינת שינה ופעילות גופנית. <span class="vote split">✓ 2-1</span> <a href="https://www.sciencedirect.com/science/article/pii/S1087079217301661" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">התערבויות של ויסות עצמי התנהגותי (לא תרופות/תוספים) משפרות איכות שינה באנשים ללא הפרעת שינה קלינית. <span class="vote">✓ 3-0</span> <a href="https://www.sciencedirect.com/science/article/pii/S1087079217301661" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">לפעילות גופנית בסיס הראיות החזק ביותר מבין ההרגלים: גם אימון בודד וגם אימון סדיר משפרים שינה; משך ארוך יותר מגדיל שינה עמוקה ומקצר הירדמות. <span class="vote split">✓ 2-1</span> <a href="https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0277323" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">קפאין פוגע בשינה באופן מתועד — ואנשים מזלזלים שיטתית בהשפעתו על עצמם. <span class="vote">✓ 3-0</span> <a href="https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0277323" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">אור ערב פוגע בשינה עם קשר מנה-תגובה; ראיות אור-יום אובייקטיביות עדיין לא חד-משמעיות. <span class="vote">✓ 3-0</span> <a href="https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0277323" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">בסקירת 35 סקירות שיטתיות: תרגול גוף-נפש הוא מהמבוססים ביותר לשיפור שינה באוכלוסיות בריאות. <span class="vote">✓ 3-0</span> <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8196727/" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">טאי צ'י: שיפור גדול באיכות שינה (SMD 0.87); תרגול גוף-נפש: SMD 0.70 במבוגרים עם שינה ירודה. <span class="vote split">✓ 2-1</span> <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8196727/" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">מטא-אנליזה, 22 RCTs, 1,806 משתתפים: פעילות גופנית שיפרה איכות שינה ב-‎−2.19 נק' PSQI. <span class="vote">✓ 3-0</span> <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8215288/" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">פעילות גופנית הפחיתה חומרת נדודי שינה (ISI ‎−1.52) וישנוניות יומית (ESS ‎−2.55). <span class="vote">✓ 3-0</span> <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8215288/" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">המטא-אנליזה הראשונה שבדקה ספציפית מבוגרים ללא מחלות — ישימה ישירות לאנשים בריאים. <span class="vote">✓ 3-0</span> <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8215288/" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">אימון סדיר (חודשיים+) משפר איכות שינה סובייקטיבית בכ-2.2 נק' PSQI — אפקט קלינית משמעותי. <span class="vote">✓ 3-0</span> <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8215288/" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">הפחתת חומרת נדודי שינה ~1.5 נק' ISI על פני 4 RCTs עם הטרוגניות נמוכה (I²=8%). <span class="vote">✓ 3-0</span> <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8215288/" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">פעילות גופנית משפרת בעיקר את תחושת השינה: אקטיגרפיה הראתה רק שיפור יעילות קטן (+1.22%). <span class="vote">✓ 3-0</span> <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8215288/" target="_blank" rel="noopener">מקור</a></div>
+    <div class="claim">אימון כרוני: אפקט מתון על איכות סובייקטיבית וקטן-בינוני על זמן הירדמות (66 מחקרים). <span class="vote">✓ 3-0</span> <a href="https://link.springer.com/article/10.1007/s10865-015-9617-6" target="_blank" rel="noopener">מקור</a></div>
+  </details>
+
+  <div class="links">
+    <a class="biglink" href="https://nirizhki-dev.github.io/sleep-pilot/" target="_blank" rel="noopener">🌙 לאפליקציה</a>
+    <a class="biglink alt" href="https://nirizhki-dev.github.io/sleep-pilot/presentation.html" target="_blank" rel="noopener">🎞 למצגת</a>
+  </div>
+
+  <p class="note">שיטת מחקר העומק: 5 סוכני חיפוש מקבילים → קריאת ~15 מקורות → חילוץ טענות בנות-הפרכה → 3 סוכני-ספקנים לכל טענה (נפסלת ברוב מפריך) → 17 טענות שרדו. אין באמור אבחנה או המלצה רפואית.</p>
+</div>
+
+<script>
+fetch('./research.json', { cache: 'no-store' }).then(r => r.json()).then(list => {
+  document.getElementById('c-daily').textContent = list.length;
+  document.getElementById('daily').innerHTML = list.map(x => `
+    <div class="entry">
+      <div class="d">${new Date(x.date + 'T12:00:00').toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+      <div class="t">${x.title}</div>
+      <p class="s">${x.summary}</p>
+      <span class="badge">🔎 ${x.evidence}</span>
+      <div class="ins"><b>ליישום</b>${x.insight}</div>
+      <div class="src">${x.source}</div>
+    </div>`).join('');
+}).catch(() => {
+  document.getElementById('daily').innerHTML = '<p style="color:var(--muted)">לא ניתן לטעון את התובנות כרגע.</p>';
+});
+</script>
+</body>
+</html>
