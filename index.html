@@ -276,6 +276,12 @@
     </button>
   </div>
 
+  <section class="card" id="sec-why" style="border:1px solid var(--accent)">
+    <h2>🎯 הלמה שלי</h2>
+    <p class="sub">אני אחראי על ההרגלים שלי ועל השינוי שלי. בשביל מה?</p>
+    <div id="whybox"></div>
+  </section>
+
   <button class="affirm-card" id="affirm" aria-label="אפירמציית הערב — הקשה למשפט הבא">
     <span class="affirm-add" id="affirm-add">➕ משפט משלי</span>
     <span class="eyebrow">המציאות שאני יוצר</span>
@@ -559,6 +565,7 @@ const ACH = [
   { id: 'comeback', e: '💪', n: 'לא מפספסים פעמיים', won: () => DATA.habits.some(h => hasComeback(h.history)), prog: () => [DATA.habits.some(h => hasComeback(h.history)) ? 1 : 0, 1, 'חזרות'], deep: 'ההישג החשוב ביותר: אשמה על פספוס מזינה את הפספוס הבא. מי שחוזר למחרת ניצח את מנגנון הכישלון המרכזי.' },
   { id: 'signal-3', e: '📿', n: 'שלושה לילות של אות', won: () => bestSigRun() >= 3, prog: () => [Math.min(3, bestSigRun()), 3, 'לילות ברצף'], deep: 'כפתור לילה הוא הצהרת בעלות זעירה. שלושה לילות ברצף — הצהרה שהפכה לדפוס.' },
   { id: 'researcher', e: '🔬', n: 'חוקר של עצמי', won: hasFinding, prog: () => [hasFinding() ? 1 : 0, 1, 'ממצאים'], deep: 'שיא הגשר: כבר לא "מומחים אומרים" אלא "הנתונים שלי מראים".' },
+  { id: 'why-set', e: '🎯', n: 'יש לי למה', won: () => !!(DATA.settings.why || '').trim(), prog: () => [(DATA.settings.why || '').trim() ? 1 : 0, 1, 'למה מוגדר'], deep: 'ניטשה: "מי שיש לו למה — יסתדר עם כמעט כל איך". הלמה הוא העוגן שמחזיק את ההרגלים בימים הקשים; מרגע שהוגדר, כל סימון הוא הצבעה בשבילו.' },
 ];
 const LEVELS = [[0, 'מתחילים הלילה'], [60, 'בונה הרגלים'], [150, 'שומר הלילה'], [300, 'קצב יציב'], [500, 'אלוף הרצפים'], [800, 'אמן השינה'], [1200, 'אגדת שינה 🌙']];
 function points() {
@@ -773,11 +780,70 @@ function renderIdeas() {
   }
 }
 
+/* ---- הלמה שלי: הבסיס של האחריות האישית ---- */
+const WHYS = [
+  { e: '🕊️', t: 'חופש תנועה בגוף בריא' },
+  { e: '💞', t: 'מערכות יחסים עמוקות ונוכחות אמיתית' },
+  { e: '😊', t: 'אושר יומיומי וראיית הטוב' },
+  { e: '👨‍👧', t: 'הורות ראויה — דוגמה אישית לילדים' },
+  { e: '⚡', t: 'אנרגיה ליצירה ולעשייה' },
+  { e: '🧭', t: 'להיות נאמן לעצמי ולמילה שלי' },
+];
+const myWhy = () => (DATA.settings.why || '').trim();
+
+function renderWhy() {
+  const box = $('#whybox');
+  const w = myWhy();
+  if (!w) {
+    box.innerHTML = `<div class="sigs">${WHYS.map((x, i) => `<button class="sig" data-i="${i}"><span class="se">${x.e}</span><span class="sl">${x.t}</span></button>`).join('')}</div>
+      <div class="addidea" style="margin-top:10px">
+        <input id="why-free" placeholder="או במילים שלך: אני עושה את זה בשביל…" maxlength="120">
+        <button class="pill solid" id="why-save" style="justify-self:start">זו הלמה שלי</button>
+      </div>`;
+    for (const b of box.querySelectorAll('.sig')) b.onclick = () => setWhy(WHYS[+b.dataset.i].e + ' ' + WHYS[+b.dataset.i].t);
+    box.querySelector('#why-save').onclick = () => { const v = $('#why-free').value.trim(); if (v) setWhy(v); };
+    return;
+  }
+  box.innerHTML = `
+    <div class="affirm-text" style="font-size:1.2rem;margin:6px 0 12px">${w}</div>
+    <div class="row">
+      <button class="pill solid" id="why-remind">⏰ תזכורת יומית עם הלמה</button>
+      <button class="ghost" id="why-edit">עריכה</button>
+      <span class="thanks" id="why-msg"></span>
+    </div>`;
+  box.querySelector('#why-edit').onclick = async () => { await api('/api/settings', { why: '' }); refresh(); };
+  box.querySelector('#why-remind').onclick = () => {
+    const time = prompt('באיזו שעה להזכיר לך את הלמה, כל יום?', DATA.settings.whyReminderTime || '21:00');
+    if (!time || !/^\d{1,2}:\d{2}$/.test(time.trim())) return;
+    api('/api/settings', { whyReminderTime: time.trim() });
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    const day = d.toLocaleDateString('sv-SE').replace(/-/g, '');
+    const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//habits-why//he', 'BEGIN:VEVENT',
+      `UID:why-${day}@habits.local`, `DTSTART:${day}T${time.trim().replace(':', '').padStart(4, '0')}00`, 'RRULE:FREQ=DAILY',
+      `SUMMARY:🎯 ${w.replace(/[,;\\]/g, ' ')}`,
+      'DESCRIPTION:אני אחראי על ההרגלים שלי ועל השינוי שלי. סימון אחד קטן עכשיו — הצבעה ללמה.',
+      'BEGIN:VALARM', 'ACTION:DISPLAY', 'TRIGGER:-PT0M', `DESCRIPTION:🎯 ${w.replace(/[,;\\]/g, ' ')}`, 'END:VALARM',
+      'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+    a.download = 'הלמה-שלי.ics'; a.click();
+    $('#why-msg').textContent = '✓ ירד קובץ — פתחו אותו והיומן יזכיר כל יום';
+    setTimeout(() => { const m = $('#why-msg'); if (m) m.textContent = ''; }, 5000);
+  };
+}
+async function setWhy(text) {
+  await api('/api/settings', { why: text, whySetAt: todayISO() });
+  toast('🎯 הלמה נקבעה — מעכשיו כל סימון הוא הצבעה בשבילה');
+  confetti(true); vibrate([40, 60, 40]);
+  refresh();
+}
+
 /* ---- אפירמציות ---- */
 const AFFIRMATIONS = ['אני ישן באופן טבעי ובקלות.', 'הגוף שלי מתמלא בשנתי בכל מה שהוא צריך.', 'השינה שלי עמוקה ורציפה.', 'אני נושם עמוק. השרירים שלי רפויים.', 'הלילה הוא זמן ההתחדשות שלי.', 'אני משחרר את היום — הוא עשה את שלו.', 'המיטה שלי היא מקום של מנוחה.', 'אני בוחר להירגע. הגוף כבר יודע את הדרך.', 'כל נשיפה מרפה אותי עוד קצת.', 'אני אדם שישן טוב.'];
 let affirmOffset = 0;
 function renderAffirm() {
   const list = [...AFFIRMATIONS, ...(DATA.settings.myAffirmations || [])];
+  if (myWhy()) list.push(`אני בוחר בהרגלים האלה בשביל ${myWhy()}.`, 'אני אחראי על ההרגלים שלי ועל השינוי שלי.');
   $('#affirm-text').textContent = list[(Math.floor(Date.now() / 86400000) + affirmOffset) % list.length];
 }
 $('#affirm').onclick = e => { if (e.target.id === 'affirm-add') return; affirmOffset++; renderAffirm(); vibrate(15); };
@@ -889,7 +955,14 @@ function renderPillars() {
       b.innerHTML = `<span class="se">${s.e}</span><span class="sl">${s.l}</span>${st >= 2 ? `<span class="sk">🔥×${st}</span>` : ''}`;
       b.onclick = async () => {
         const r = await api('/api/signals/toggle', { key: s.key, date: todayISO() });
-        if (r.on) { const ns = sigStreak(s.key) + 1; toast(ns >= 3 ? `🔥 יום ${ns} ברצף — ${s.l}!` : `${s.e} +5 נק׳ — נרשם`); confetti(); vibrate(25); }
+        if (r.on) {
+          const ns = sigStreak(s.key) + 1;
+          const w = myWhy();
+          const msg = ns >= 3 ? `🔥 יום ${ns} ברצף — ${s.l}!`
+            : (w && DATA.signals.length % 3 === 2) ? `🎯 עוד הצבעה בשביל: ${w}`
+            : `${s.e} +5 נק׳ — נרשם`;
+          toast(msg); confetti(); vibrate(25);
+        }
         refresh();
       };
       grid.appendChild(b);
@@ -1053,7 +1126,7 @@ function renderCommunity() {
 async function refresh() {
   DATA = await api('/api/data');
   await commSync();
-  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderPillars(); renderResearch(); renderDailyResearch(); renderCommunity();
+  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderPillars(); renderResearch(); renderDailyResearch(); renderCommunity(); renderWhy();
   $('#avatar').textContent = DATA.settings.avatar || '🌙';
   checkAchievements();
 }
