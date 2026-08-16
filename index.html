@@ -291,8 +291,8 @@
   </button>
 
   <section class="card" id="sec-signals">
-    <h2>ארבעת העמודים שלי</h2>
-    <p class="sub">הקשה אחת על מה שקרה היום — בלי טפסים. כל עמוד צובר ציון הרגל 0–100 (הקישו על הציון להסבר)</p>
+    <h2>הבחירות היישומיות שלי</h2>
+    <p class="sub">הקשה אחת = בחירה אחת. הבחירות מצטברות — והזהות נבנית: אדם שנע ומשתמש בגופו בחופשיות. כל עמוד צובר ציון 0–100 (הקישו על הציון להסבר)</p>
     <div id="pillars"></div>
   </section>
 
@@ -397,7 +397,7 @@
 
 <nav class="float" aria-label="ניווט" dir="rtl">
   <button data-to="top" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>בית</button>
-  <button data-to="sec-signals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>כפתורים</button>
+  <button data-to="sec-signals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>בחירות</button>
   <button data-to="sec-ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 1 4 10.5c-.8.7-1 1.5-1 2.5h-6c0-1-.2-1.8-1-2.5A6 6 0 0 1 12 3z"/></svg>רעיונות</button>
   <button data-to="sec-studies"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5L4 19a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3L14 8V3"/></svg>מחקרים</button>
   <button data-to="sec-export"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>משוב</button>
@@ -574,7 +574,7 @@ const ACH = [
   { id: 'streak-3', e: '🔥', n: 'שלושה לילות', won: () => bestRun() >= 3, prog: () => [Math.min(3, bestRun()), 3, 'ימים ברצף'], deep: 'שלושה ימים רצופים — הנקודה שבה הרגל מפסיק להיות החלטה ומתחיל להיות ברירת מחדל.' },
   { id: 'streak-7', e: '🏆', n: 'שבוע של זהב', won: () => bestRun() >= 7, prog: () => [Math.min(7, bestRun()), 7, 'ימים ברצף'], deep: 'שבוע שלם כולל סופ"ש — ההוכחה שההרגל שורד גם בלי מסגרת.' },
   { id: 'comeback', e: '💪', n: 'לא מפספסים פעמיים', won: () => DATA.habits.some(h => hasComeback(h.history)), prog: () => [DATA.habits.some(h => hasComeback(h.history)) ? 1 : 0, 1, 'חזרות'], deep: 'ההישג החשוב ביותר: אשמה על פספוס מזינה את הפספוס הבא. מי שחוזר למחרת ניצח את מנגנון הכישלון המרכזי.' },
-  { id: 'signal-3', e: '📿', n: 'שלושה לילות של אות', won: () => bestSigRun() >= 3, prog: () => [Math.min(3, bestSigRun()), 3, 'לילות ברצף'], deep: 'כפתור לילה הוא הצהרת בעלות זעירה. שלושה לילות ברצף — הצהרה שהפכה לדפוס.' },
+  { id: 'signal-3', e: '📿', n: 'שלוש בחירות ברצף', won: () => bestSigRun() >= 3, prog: () => [Math.min(3, bestSigRun()), 3, 'ימים ברצף'], deep: 'בחירה יישומית היא הצהרת בעלות זעירה: "זה קרה כי אני בחרתי". שלושה ימים ברצף של אותה בחירה — הצהרה שהפכה לדפוס, ודפוס שהופך לזהות.' },
   { id: 'researcher', e: '🔬', n: 'חוקר של עצמי', won: hasFinding, prog: () => [hasFinding() ? 1 : 0, 1, 'ממצאים'], deep: 'שיא הגשר: כבר לא "מומחים אומרים" אלא "הנתונים שלי מראים".' },
   { id: 'why-set', e: '🎯', n: 'יש לי למה', won: () => !!(DATA.settings.why || '').trim(), prog: () => [(DATA.settings.why || '').trim() ? 1 : 0, 1, 'למה מוגדר'], deep: 'ניטשה: "מי שיש לו למה — יסתדר עם כמעט כל איך". הלמה הוא העוגן שמחזיק את ההרגלים בימים הקשים; מרגע שהוגדר, כל סימון הוא הצבעה בשבילו.' },
 ];
@@ -834,7 +834,7 @@ function renderWhy() {
     const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//habits-why//he', 'BEGIN:VEVENT',
       `UID:why-${day}@habits.local`, `DTSTART:${day}T${time.trim().replace(':', '').padStart(4, '0')}00`, 'RRULE:FREQ=DAILY',
       `SUMMARY:🎯 ${w.replace(/[,;\\]/g, ' ')}`,
-      'DESCRIPTION:אני אחראי על ההרגלים שלי ועל השינוי שלי. סימון אחד קטן עכשיו — הצבעה ללמה.',
+      'DESCRIPTION:אני אחראי על ההרגלים שלי ועל השינוי שלי. בחירה יישומית אחת עכשיו — בשביל הלמה.',
       'BEGIN:VALARM', 'ACTION:DISPLAY', 'TRIGGER:-PT0M', `DESCRIPTION:🎯 ${w.replace(/[,;\\]/g, ' ')}`, 'END:VALARM',
       'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
     const a = document.createElement('a');
@@ -941,7 +941,7 @@ function scoreSheet(pl) {
     <div class="sh-row">📅 עקביות: ${activeDays}/14 ימים פעילים <span style="margin-inline-start:auto">${Math.round(activeDays / 14 * 60)}/60</span></div>
     <div class="sh-row">🔥 רצף נוכחי: ${run} ימים <span style="margin-inline-start:auto">${Math.round(Math.min(run, 10) / 10 * 25)}/25</span></div>
     <div class="sh-row">💪 חזרה אחרי פספוס <span style="margin-inline-start:auto">${cb ? 15 : 0}/15</span></div>
-    <p class="sh-deep">יום פעיל = לפחות כפתור אחד של העמוד סומן. שלבים: 0–40 מתחיל · 40–70 מתבסס · 70–85 יציב · <b>85+ מועמד למאסטר</b> (החזקה של 8 שבועות = הסמכה).</p>`);
+    <p class="sh-deep">יום פעיל = לפחות בחירה יישומית אחת בעמוד. שלבים: 0–40 מתחיל · 40–70 מתבסס · 70–85 יציב · <b>85+ מועמד למאסטר</b> (החזקה של 8 שבועות = הסמכה).</p>`);
 }
 
 function renderPillars() {
@@ -976,9 +976,9 @@ function renderPillars() {
         if (r.on) {
           const ns = sigStreak(s.key) + 1;
           const w = myWhy();
-          const msg = ns >= 3 ? `🔥 יום ${ns} ברצף — ${s.l}!`
-            : (w && DATA.signals.length % 3 === 2) ? `🎯 עוד הצבעה בשביל: ${w}`
-            : `${s.e} +5 נק׳ — נרשם`;
+          const msg = ns >= 3 ? `🔥 בחירה ${ns} ברצף — ${s.l}!`
+            : (w && DATA.signals.length % 3 === 2) ? `🎯 בחירה יישומית בשביל: ${w}`
+            : `${s.e} בחירה יישומית נרשמה · +5 נק׳`;
           toast(msg); confetti(); vibrate(25);
         }
         refresh();
@@ -991,7 +991,7 @@ function renderPillars() {
 function renderResearch() {
   const rows = researchRows();
   const box = $('#findings');
-  if (!rows.length) { box.innerHTML = '<p class="sub" style="margin:0">התחילו להקיש על כפתורי הלילה — הממצא הראשון יופיע כאן לבד.</p>'; return; }
+  if (!rows.length) { box.innerHTML = '<p class="sub" style="margin:0">התחילו לסמן בחירות יישומיות — הממצא הראשון יופיע כאן לבד.</p>'; return; }
   rows.sort((a, b) => b.done - a.done);
   box.innerHTML = rows.map(r => r.done
     ? `<div class="find"><span class="fe">${r.s.e}</span><span class="fd">${r.s.l}<small>על סמך ${r.n1} לילות מול ${r.n2}</small></span>
@@ -1177,7 +1177,7 @@ function renderStudies() {
       <div style="font-size:0.85rem;color:var(--ink-2);margin-top:8px">💡 ${top[0].t.tip}</div>
       <div class="row" style="margin-top:10px">
         <button class="pill solid" id="prof-idea">פתח את הרעיון המתאים לך</button>
-        <button class="pill" id="prof-sig">סמן את הכפתורים שלך הערב</button>
+        <button class="pill" id="prof-sig">הבחירות היישומיות שלך הערב</button>
       </div></div>`;
     profBox.querySelector('#prof-idea').onclick = () => {
       const d = document.querySelector(`details.idea[data-idea="${top[0].t.ideaId}"]`);
@@ -1185,7 +1185,7 @@ function renderStudies() {
     };
     profBox.querySelector('#prof-sig').onclick = () => {
       document.getElementById('sec-signals').scrollIntoView({ block: 'start' });
-      toast(`${top[0].t.e} הכפתורים שלך: ${SIGNALS.filter(s => top[0].t.signals.includes(s.key)).map(s => s.e).join(' ')}`);
+      toast(`${top[0].t.e} הבחירות שלך: ${SIGNALS.filter(s => top[0].t.signals.includes(s.key)).map(s => s.e).join(' ')}`);
     };
   } else {
     profBox.innerHTML = `<p class="sub" style="margin:0 0 12px">דרגו לפחות 3 מחקרים — והמערכת תזהה למה אתם מתחברים ומה נדרש בשבילכם לשינוי.</p>`;
