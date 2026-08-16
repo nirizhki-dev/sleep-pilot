@@ -31,14 +31,15 @@
   .greet, .hdate { text-shadow: 0 1px 10px rgba(7,9,16,0.45); }
 
   * { box-sizing: border-box; }
+  html { overflow-x: hidden; }
   body {
-    margin: 0; color: var(--ink); direction: rtl;
+    margin: 0; color: var(--ink); direction: rtl; overflow-x: hidden; width: 100%;
     background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 520px) fixed;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     line-height: 1.45;
   }
   #sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-  .wrap { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; padding: 22px 16px 118px; display: flex; flex-direction: column; gap: 13px; }
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 560px; margin: 0 auto; padding: 22px 16px 118px; display: flex; flex-direction: column; gap: 13px; }
 
   header { display: flex; align-items: center; gap: 12px; padding: 2px 4px 4px; }
   header .avatar {
@@ -321,6 +322,13 @@
     <button class="ghost" id="dr-archive">מחקרים קודמים ←</button>
   </section>
 
+  <section class="card" id="sec-studies">
+    <h2>🔬 כל המחקרים</h2>
+    <p class="sub">דרגו כמה כל מחקר מדבר אליכם (1–5) — והפרופיל האישי שלכם ייבנה מזה</p>
+    <div id="myprofile"></div>
+    <div id="studies"></div>
+  </section>
+
   <section class="card" id="tonight-detail" hidden>
     <h2 id="td-title"></h2>
     <p class="how" id="td-how" style="font-size:0.9rem;margin:0 0 4px"></p>
@@ -391,6 +399,7 @@
   <button data-to="top" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>בית</button>
   <button data-to="sec-signals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>כפתורים</button>
   <button data-to="sec-ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 1 4 10.5c-.8.7-1 1.5-1 2.5h-6c0-1-.2-1.8-1-2.5A6 6 0 0 1 12 3z"/></svg>רעיונות</button>
+  <button data-to="sec-studies"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5L4 19a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3L14 8V3"/></svg>מחקרים</button>
   <button data-to="sec-export"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>משוב</button>
 </nav>
 
@@ -416,6 +425,8 @@ const SEED_IDEAS = [
   { id: 'f-water', title: 'מים לאורך היום, פחות בערב', how: 'רוב השתייה עד אחה"צ; להפחית בשעתיים שלפני השינה.', why: 'הידרציה תומכת באנרגיה וריכוז ביום; הפחתה בערב מצמצמת יקיצות שירותים.', source: 'עיקרון יישומי מקובל', pillar: 'food' },
   { id: 'n-breath', title: 'נשימת 4-7-8 לפני השינה', how: 'שאיפה 4 שניות, החזקה 7, נשיפה 8 — ארבעה סבבים במיטה.', why: 'האטת הנשימה מפעילה את המערכת הפאראסימפתטית; הרפיה היא מרכיב ליבה בהתערבויות המוכחות.', source: 'Sleep Med Rev 2017 — מרכיב הרפיה', pillar: 'mind' },
   { id: 'n-meditate', title: 'עשר דקות תרגול קשוב ביום', how: 'מדיטציה מודרכת קצרה, בשעה קבועה — עוגן לפני ארוחת צהריים או ערב.', why: 'ניהול לחץ והרפיה הם מהמרכיבים השכיחים בהתערבויות שינה אפקטיביות (g=-0.54).', source: 'Murawski, Sleep Med Rev 2017', pillar: 'mind' },
+  { id: 'd-limit', title: 'תקרת זמן מסך יומית', how: 'קבעו יעד (למשל 3 שעות) והפעילו מגבלה ברווחה דיגיטלית / זמן מסך — המכשיר אוכף בשבילכם.', why: 'צריכת מסכים בערב היא הדלק המרכזי של דחיינות שינה; מגבלה אוטומטית מחליפה כוח רצון.', source: 'SLEEP 2026; עיצוב סביבה (הרגלים אטומיים)', pillar: 'digital' },
+  { id: 'd-stream', title: 'סטרימינג עם קו סיום מראש', how: 'לפני שמתחילים לצפות — קובעים שעת עצירה. "עוד פרק" מוכרע מראש, לא ברגע החולשה.', why: 'ההחלטה מראש (כוונת יישום) מנצחת את מנגנון הסיפוק המיידי של הפרק הבא.', source: 'MCII, Psychology & Health 2020', pillar: 'digital' },
 ];
 const DEFAULT_DATA = { ideas: SEED_IDEAS, feedback: [], hidden: [], habits: [], settings: {}, signals: [] };
 function loadD() {
@@ -571,7 +582,8 @@ const LEVELS = [[0, 'מתחילים הלילה'], [60, 'בונה הרגלים'],
 function points() {
   const checks = DATA.habits.reduce((a, h) => a + Object.keys(h.history).length, 0);
   const proven = visibleIdeas().filter(i => { const s = stats(i.id); return s.n >= 3 && s.avg >= 4; }).length;
-  return DATA.feedback.length * 10 + checks * 15 + DATA.signals.length * 5 + proven * 50 + ACH.filter(a => a.won()).length * 25;
+  const studyR = Object.keys(DATA.settings.studyRatings || {}).length;
+  return DATA.feedback.length * 10 + checks * 15 + DATA.signals.length * 5 + studyR * 5 + proven * 50 + ACH.filter(a => a.won()).length * 25;
 }
 
 /* ---- Sheet ---- */
@@ -763,6 +775,7 @@ function renderIdeas() {
   for (const { i, s } of sorted) {
     const d = document.createElement('details');
     d.className = 'idea';
+    d.dataset.idea = i.id;
     const pl = PILLARS.find(x => x.p === (i.pillar || 'sleep'));
     d.innerHTML = `<summary><span style="font-size:0.95rem">${pl ? pl.e : '😴'}</span><span class="ititle2"></span>${badge(s, i.id)}<span class="chev">◀</span></summary>
       <div class="body"><p class="how"></p><p class="why"></p><p class="src"></p>
@@ -866,6 +879,7 @@ const PILLARS = [
   { p: 'move', e: '🏃', n: 'תנועה' },
   { p: 'food', e: '🥗', n: 'תזונה' },
   { p: 'mind', e: '🧘', n: 'מיינד' },
+  { p: 'digital', e: '📱', n: 'דיגיטל' },
 ];
 const SIGNALS = [
   { key: 'noscreen', e: '📵', l: 'שעה בלי מסך לפני השינה', pillar: 'sleep' },
@@ -882,6 +896,10 @@ const SIGNALS = [
   { key: 'water', e: '🚰', l: 'שתיתי מים לאורך היום', pillar: 'food' },
   { key: 'nosugar', e: '🍬', l: 'יום בלי מתוק מעובד', pillar: 'food' },
   { key: 'mindfuleat', e: '🥗', l: 'אכילה רגועה, בלי מסך', pillar: 'food' },
+  { key: 'screenlimit', e: '⏳', l: 'עמדתי ביעד זמן המסך', pillar: 'digital' },
+  { key: 'streamstop', e: '📺', l: 'סטרימינג נעצר בזמן שקבעתי', pillar: 'digital' },
+  { key: 'nophonewake', e: '🌅', l: 'בוקר בלי טלפון (30 דק׳)', pillar: 'digital' },
+  { key: 'socialbatch', e: '📵', l: 'רשתות רק בחלונות קבועים', pillar: 'digital' },
   { key: 'meditate', e: '🧘', l: 'מדיטציה / תרגול קשוב', pillar: 'mind' },
   { key: 'breath', e: '🌬️', l: 'תרגיל נשימה', pillar: 'mind' },
   { key: 'gratitude', e: '📓', l: 'רגע הכרת תודה', pillar: 'mind' },
@@ -1022,6 +1040,7 @@ async function renderDailyResearch() {
   $('#dr-evidence').textContent = '🔎 ' + r.evidence;
   $('#dr-insight').textContent = r.insight;
   $('#dr-source').textContent = 'מקור: ' + r.source;
+  renderStudies();
   $('#dr-archive').style.display = RESEARCH.length > 1 ? '' : 'none';
   $('#dr-archive').onclick = () => openSheet(`
     <div class="sh-head"><span class="sh-emoji">🧪</span><div><div class="sh-title">ארכיון המחקרים</div>
@@ -1121,6 +1140,91 @@ function renderCommunity() {
         + `<p class="sub" style="margin:8px 0 0">${r.note}</p>`
       : '<p class="sub">עדיין אין מאסטרים — היו הראשונים: ציון 85+ שמוחזק 8 שבועות.</p>';
   }).catch(() => { $('#cm-masters').innerHTML = ''; });
+}
+
+/* ---- כל המחקרים: דירוג, פרופיל אישי ותובנות ---- */
+const THEMES = [
+  { k: 'move', n: 'תנועה', e: '🏃', kw: ['פעילות', 'אימון', 'תנועה', 'טאי', 'יוגה', 'הליכה', 'צעד'], signals: ['steps', 'workout', 'mindbody'], ideaId: 'm-exercise', tip: 'התנועה היא המנוף שלך — התחל מהצעד הקטן: הליכה יומית או אימון קצר פעמיים בשבוע.' },
+  { k: 'light', n: 'אור וקצב יממה', e: '☀️', kw: ['אור', 'שמש', 'צירקדי', 'בוקר'], signals: ['daylight', 'fresh'], ideaId: 'light', tip: 'האור מדבר אליך — 10 דקות בחוץ בשעה הראשונה של הבוקר הן ההתחלה הטבעית שלך.' },
+  { k: 'food', n: 'תזונה ותזמון', e: '🥗', kw: ['ארוחה', 'אכיל', 'קפאין', 'קפה', 'תזונה', 'גלוקוז'], signals: ['earlydinner', 'earlycoffee', 'nosugar'], ideaId: 'f-earlydinner', tip: 'התזמון של האוכל הוא הכיוון שלך — התחל מהקדמת ארוחת הערב וגבול הקפאין.' },
+  { k: 'env', n: 'סביבת שינה', e: '🌑', kw: ['טמפרטורה', 'חדר', 'רעש', 'מעלות', 'אטמי', 'קריר'], signals: ['darkroom'], ideaId: 'cool', tip: 'הסביבה קוראת לך — חדר קריר, חשוך ושקט הוא השינוי הפיזי שהכי מתחבר אליך.' },
+  { k: 'digital', n: 'מסכים ודיגיטל', e: '📱', kw: ['מסך', 'טלפון', 'אור כחול', 'משקפי', 'סטרימינג', 'דיגיטל'], signals: ['noscreen', 'screenlimit', 'streamstop'], ideaId: 'd-limit', tip: 'היחסים עם המסך הם הזירה שלך — תקרת זמן מסך וקו סיום לסטרימינג ישנו לך את הערבים.' },
+  { k: 'mind', n: 'הרפיה ומיינד', e: '🧘', kw: ['הרפיה', 'מדיטצ', 'נשימ', 'לחץ', 'דחיינ', 'כוונת', 'רעש ורוד'], signals: ['breath', 'meditate', 'calm'], ideaId: 'n-breath', tip: 'הרוגע הוא הדלת שלך — נשימת 4-7-8 הערב היא הצעד הראשון.' },
+  { k: 'sleepcore', n: 'דפוסי שינה', e: '😴', kw: ['תנומ', 'שעות שינה', 'יקיצ', 'עקבי'], signals: ['ritual', 'easysleep'], ideaId: 'waketime', tip: 'הקצב עצמו מדבר אליך — שעת יקיצה קבועה היא העוגן שממנו הכול מתייצב.' },
+];
+const themeOf = r => THEMES.find(t => t.kw.some(k => (r.title + ' ' + r.summary).includes(k))) || THEMES[THEMES.length - 1];
+const studyRatings = () => DATA.settings.studyRatings || {};
+
+function renderStudies() {
+  if (!Array.isArray(RESEARCH) || !RESEARCH.length) return;
+  const ratings = studyRatings();
+  // פרופיל: ממוצע דירוג לפי נושא
+  const agg = {};
+  for (const r of RESEARCH) {
+    const s = ratings[r.date];
+    if (!s) continue;
+    const t = themeOf(r);
+    agg[t.k] ||= { t, sum: 0, n: 0 };
+    agg[t.k].sum += s; agg[t.k].n++;
+  }
+  const rated = Object.values(agg);
+  const profBox = $('#myprofile');
+  if (Object.keys(ratings).length >= 3 && rated.length) {
+    const top = rated.map(x => ({ ...x, avg: x.sum / x.n })).sort((a, b) => b.avg - a.avg || b.n - a.n).slice(0, 2);
+    profBox.innerHTML = `<div style="background:var(--accent-soft);border-radius:18px;padding:14px 17px;margin-bottom:14px">
+      <div style="font-size:0.72rem;font-weight:700;color:var(--accent);letter-spacing:0.06em;margin-bottom:6px">הפרופיל שלך — למה אתה מתחבר</div>
+      ${top.map(x => `<div style="font-size:0.92rem;font-weight:700;margin-bottom:2px">${x.t.e} ${x.t.n} <span style="font-weight:400;color:var(--ink-2);font-size:0.78rem">· ${fmt(x.avg)} מתוך 5 (${x.n} מחקרים)</span></div>`).join('')}
+      <div style="font-size:0.85rem;color:var(--ink-2);margin-top:8px">💡 ${top[0].t.tip}</div>
+      <div class="row" style="margin-top:10px">
+        <button class="pill solid" id="prof-idea">פתח את הרעיון המתאים לך</button>
+        <button class="pill" id="prof-sig">סמן את הכפתורים שלך הערב</button>
+      </div></div>`;
+    profBox.querySelector('#prof-idea').onclick = () => {
+      const d = document.querySelector(`details.idea[data-idea="${top[0].t.ideaId}"]`);
+      if (d) { d.open = true; d.scrollIntoView({ block: 'center' }); }
+    };
+    profBox.querySelector('#prof-sig').onclick = () => {
+      document.getElementById('sec-signals').scrollIntoView({ block: 'start' });
+      toast(`${top[0].t.e} הכפתורים שלך: ${SIGNALS.filter(s => top[0].t.signals.includes(s.key)).map(s => s.e).join(' ')}`);
+    };
+  } else {
+    profBox.innerHTML = `<p class="sub" style="margin:0 0 12px">דרגו לפחות 3 מחקרים — והמערכת תזהה למה אתם מתחברים ומה נדרש בשבילכם לשינוי.</p>`;
+  }
+  // רשימת כל המחקרים עם דירוג
+  $('#studies').innerHTML = '';
+  for (const r of RESEARCH) {
+    const t = themeOf(r);
+    const my = ratings[r.date];
+    const d = document.createElement('details');
+    d.className = 'idea';
+    d.innerHTML = `
+      <summary><span style="font-size:0.95rem">${t.e}</span><span class="ititle2"></span>
+        ${my ? `<span class="badge proven">${'★'.repeat(my)}</span>` : '<span class="badge new">לא דורג</span>'}
+        <span class="chev">◀</span></summary>
+      <div class="body">
+        <p class="how"></p>
+        <p class="why" style="background:var(--accent-soft);border-radius:12px;padding:8px 12px"></p>
+        <p class="src"></p>
+        <div class="row"><span class="q" style="font-size:0.78rem;color:var(--ink-2)">כמה זה מדבר אליך?</span>
+          <div class="rate open">${rateButtons()}</div><span class="thanks"></span></div>
+      </div>`;
+    d.querySelector('.ititle2').textContent = r.title;
+    d.querySelector('.how').textContent = r.summary;
+    d.querySelector('.why').textContent = '💡 ' + r.insight;
+    d.querySelector('.src').textContent = `${r.date} · ${r.evidence} · ${r.source}`;
+    for (const b of d.querySelectorAll('.rate button')) {
+      b.onclick = async () => {
+        const next = { ...studyRatings(), [r.date]: +b.dataset.v };
+        await api('/api/settings', { studyRatings: next });
+        d.querySelector('.thanks').textContent = '✓';
+        toast('🔬 +5 נק׳ — הפרופיל שלך מתחדד');
+        confetti(); vibrate(25);
+        DATA = await api('/api/data');
+        renderStudies(); renderJourney();
+      };
+    }
+    $('#studies').appendChild(d);
+  }
 }
 
 async function refresh() {
