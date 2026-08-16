@@ -248,7 +248,7 @@
     <span class="pilot-tag">פיילוט</span>
   </header>
 
-  <div class="bento">
+  <div class="bento" data-v="home">
     <button class="moon-tile" id="moon-tile" aria-label="הרעיון להערב">
       <span class="moon" aria-hidden="true"></span>
       <span class="eyebrow">הרעיון להערב</span>
@@ -277,38 +277,61 @@
     </button>
   </div>
 
-  <section class="card" id="sec-why" style="border:1px solid var(--accent)">
+  <section class="card" data-v="home" id="sec-why" style="border:1px solid var(--accent)">
     <h2>🎯 הלמה שלי</h2>
     <p class="sub">אני אחראי על ההרגלים שלי ועל השינוי שלי. בשביל מה?</p>
     <div id="whybox"></div>
   </section>
 
-  <button class="affirm-card" id="affirm" aria-label="אפירמציית הערב — הקשה למשפט הבא">
+  <button class="affirm-card" data-v="home" id="affirm" aria-label="אפירמציית הערב — הקשה למשפט הבא">
     <span class="affirm-add" id="affirm-add">➕ משפט משלי</span>
     <span class="eyebrow">המציאות שאני יוצר</span>
     <div class="affirm-text" id="affirm-text"></div>
     <span class="affirm-sub">נשימה עמוקה · שרירים רפויים · הקש למשפט הבא</span>
   </button>
 
-  <section class="card" id="sec-signals">
+  <section data-v="home" id="sec-summaries" style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
+    <button class="card mini clickable" id="sum-choices" style="align-items:flex-start;text-align:right">
+      <div class="cap" style="text-align:right">🎯 בחירות יישומיות</div>
+      <div class="big" id="sum-choices-v" style="font-size:1.4rem">0</div>
+      <div class="cap" id="sum-choices-s" style="text-align:right"></div>
+    </button>
+    <button class="card mini clickable" id="sum-ideas" style="align-items:flex-start;text-align:right">
+      <div class="cap" style="text-align:right">💡 רעיונות</div>
+      <div class="big" id="sum-ideas-v" style="font-size:1.4rem">—</div>
+      <div class="cap" id="sum-ideas-s" style="text-align:right"></div>
+    </button>
+    <button class="card mini clickable" id="sum-studies" style="align-items:flex-start;text-align:right">
+      <div class="cap" style="text-align:right">🔬 מחקרים</div>
+      <div class="big" id="sum-studies-v" style="font-size:1.05rem;line-height:1.3;font-weight:700">טוען…</div>
+      <div class="cap" id="sum-studies-s" style="text-align:right"></div>
+    </button>
+    <button class="card mini clickable" id="sum-comm" style="align-items:flex-start;text-align:right">
+      <div class="cap" style="text-align:right">🌍 קהילה</div>
+      <div class="big" id="sum-comm-v" style="font-size:1.4rem">—</div>
+      <div class="cap" id="sum-comm-s" style="text-align:right"></div>
+    </button>
+  </section>
+
+  <section class="card" data-v="choices" id="sec-signals">
     <h2>הבחירות היישומיות שלי</h2>
     <p class="sub">הקשה אחת = בחירה אחת. הבחירות מצטברות — והזהות נבנית: אדם שנע ומשתמש בגופו בחופשיות. כל עמוד צובר ציון 0–100 (הקישו על הציון להסבר)</p>
     <div id="pillars"></div>
   </section>
 
-  <section class="card" id="sec-community">
+  <section class="card" data-v="community" id="sec-community">
     <h2>🌍 הקהילה</h2>
     <p class="sub">דירוגים משותפים חיים, מעגל הרגל עם חברים, ולוח המאסטרים</p>
     <div id="comm"></div>
   </section>
 
-  <section class="card" id="sec-research">
+  <section class="card" data-v="choices" id="sec-research">
     <h2>🔬 המחקר שלי</h2>
     <p class="sub">המערכת בודקת לבד: אחרי אילו התנהגויות אתה קם רענן יותר?</p>
     <div id="findings"></div>
   </section>
 
-  <section class="card" id="sec-daily" hidden>
+  <section class="card" data-v="studies" id="sec-daily" hidden>
     <h2>🧪 מחקר היום</h2>
     <p class="sub" id="dr-date"></p>
     <div style="font-size:1.05rem;font-weight:750;margin:0 0 8px" id="dr-title"></div>
@@ -322,14 +345,14 @@
     <button class="ghost" id="dr-archive">מחקרים קודמים ←</button>
   </section>
 
-  <section class="card" id="sec-studies">
+  <section class="card" data-v="studies" id="sec-studies">
     <h2>🔬 כל המחקרים</h2>
     <p class="sub">דרגו כמה כל מחקר מדבר אליכם (1–5) — והפרופיל האישי שלכם ייבנה מזה</p>
     <div id="myprofile"></div>
     <div id="studies"></div>
   </section>
 
-  <section class="card" id="tonight-detail" hidden>
+  <section class="card" data-v="ideas" id="tonight-detail" hidden>
     <h2 id="td-title"></h2>
     <p class="how" id="td-how" style="font-size:0.9rem;margin:0 0 4px"></p>
     <p class="why" id="td-why" style="font-size:0.8rem;color:var(--ink-2);margin:0 0 4px"></p>
@@ -342,14 +365,14 @@
     </div>
   </section>
 
-  <section class="card" id="sec-habits">
+  <section class="card" data-v="choices" id="sec-habits">
     <h2>ההרגלים שלי</h2>
     <p class="sub">רעיון שתרם — מאמצים כהרגל. עד שניים במקביל; נשבר רצף? ממשיכים מחר.</p>
     <div id="habits"></div>
     <div class="err" id="habiterr"></div>
   </section>
 
-  <section class="card" id="sec-journey">
+  <section class="card" data-v="home" id="sec-journey">
     <h2>המסע שלי</h2>
     <p class="sub">כל דירוג, סימון וחזרה אחרי נפילה — מקרבים לדרגה הבאה</p>
     <div class="level-row"><span class="level-name" id="lv-name"></span><span class="level-pts" id="lv-pts"></span></div>
@@ -358,13 +381,13 @@
     <div class="badges" id="badges"></div>
   </section>
 
-  <section class="card" id="sec-ideas">
+  <section class="card" data-v="ideas" id="sec-ideas">
     <h2>ספריית הרעיונות</h2>
     <p class="sub">מבוססי מחקר — המקור בכל רעיון. דרגו מה שניסיתם: 1–5 כמה זה תרם לשינה</p>
     <div id="ideas"></div>
   </section>
 
-  <section class="card">
+  <section class="card" data-v="ideas">
     <h2>הצעת רעיון</h2>
     <p class="sub">משהו שעבד לך? הוסף — ובסוף הפיילוט זה יגיע אלינו עם הייצוא</p>
     <div class="addidea">
@@ -374,7 +397,7 @@
     </div>
   </section>
 
-  <section class="card" id="sec-export">
+  <section class="card" data-v="community" id="sec-export">
     <h2>🧪 משוב הפיילוט</h2>
     <p class="sub">בסוף תקופת הניסיון: הורידו את קובץ הנתונים ושלחו אותו חזרה למי שהזמין אתכם. הנתונים נשמרים רק במכשיר שלכם עד שתבחרו לשתף.</p>
     <div class="row">
@@ -396,11 +419,11 @@
 <canvas id="confetti" aria-hidden="true"></canvas>
 
 <nav class="float" aria-label="ניווט" dir="rtl">
-  <button data-to="top" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>בית</button>
-  <button data-to="sec-signals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>בחירות</button>
-  <button data-to="sec-ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 1 4 10.5c-.8.7-1 1.5-1 2.5h-6c0-1-.2-1.8-1-2.5A6 6 0 0 1 12 3z"/></svg>רעיונות</button>
-  <button data-to="sec-studies"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5L4 19a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3L14 8V3"/></svg>מחקרים</button>
-  <button data-to="sec-export"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>משוב</button>
+  <button data-vw="home" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>בית</button>
+  <button data-vw="choices"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>בחירות</button>
+  <button data-vw="ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 1 4 10.5c-.8.7-1 1.5-1 2.5h-6c0-1-.2-1.8-1-2.5A6 6 0 0 1 12 3z"/></svg>רעיונות</button>
+  <button data-vw="studies"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5L4 19a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3L14 8V3"/></svg>מחקרים</button>
+  <button data-vw="community"><svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5M11 20c0-3 2.5-5 5-5s5 2 5 5"/></svg>קהילה</button>
 </nav>
 
 <script>
@@ -716,7 +739,7 @@ function renderTonight() {
   d.querySelector('.thanks').textContent = '';
   wireRating(d, TONIGHT, refresh);
 }
-$('#moon-tile').onclick = () => { if (!TONIGHT) return; const d = $('#tonight-detail'); d.hidden = !d.hidden; if (!d.hidden) d.scrollIntoView({ block: 'nearest' }); };
+$('#moon-tile').onclick = () => { if (!TONIGHT) return; showView('ideas'); $('#tonight-detail').hidden = false; };
 
 const GLYPHS = ['🌙','☀️','📵','🛁','☕','🧊','⏰','📖','🫧','🧘'];
 function renderHabits() {
@@ -1180,11 +1203,12 @@ function renderStudies() {
         <button class="pill" id="prof-sig">הבחירות היישומיות שלך הערב</button>
       </div></div>`;
     profBox.querySelector('#prof-idea').onclick = () => {
+      showView('ideas');
       const d = document.querySelector(`details.idea[data-idea="${top[0].t.ideaId}"]`);
-      if (d) { d.open = true; d.scrollIntoView({ block: 'center' }); }
+      if (d) { d.open = true; setTimeout(() => d.scrollIntoView({ block: 'center' }), 60); }
     };
     profBox.querySelector('#prof-sig').onclick = () => {
-      document.getElementById('sec-signals').scrollIntoView({ block: 'start' });
+      showView('choices');
       toast(`${top[0].t.e} הבחירות שלך: ${SIGNALS.filter(s => top[0].t.signals.includes(s.key)).map(s => s.e).join(' ')}`);
     };
   } else {
@@ -1230,8 +1254,9 @@ function renderStudies() {
 async function refresh() {
   DATA = await api('/api/data');
   await commSync();
-  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderPillars(); renderResearch(); renderDailyResearch(); renderCommunity(); renderWhy();
+  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderPillars(); renderResearch(); renderDailyResearch(); renderCommunity(); renderWhy(); renderSummaries();
   $('#avatar').textContent = DATA.settings.avatar || '🌙';
+  showView(VIEW);
   checkAchievements();
 }
 $('#avatar').onclick = () => avatarScreen();
@@ -1254,12 +1279,48 @@ onTap($('#tile-streak'), () => {
     <div class="sh-status">שיא: ${Math.max(bestRun(), bestSigRun())} ימים</div></div></div>
     <p class="sh-deep">רצף הוא תגמול מיידי על התנהגות שהפרס שלה מגיע באיחור. וחשוב ממנו: <b>לעולם לא מפספסים פעמיים</b>.</p>`);
 });
-for (const b of document.querySelectorAll('[data-to]')) {
-  b.addEventListener('click', () => {
-    document.getElementById(b.dataset.to)?.scrollIntoView({ block: 'start', behavior: reduceMotion() ? 'auto' : 'smooth' });
-    for (const x of document.querySelectorAll('[data-to]')) x.classList.toggle('on', x.dataset.to === b.dataset.to);
-  });
+/* ---- מנוע מסכים: בית = שיאים; כל נושא נפתח למסך העמקה ---- */
+let VIEW = 'home';
+function showView(v) {
+  VIEW = v;
+  for (const el of document.querySelectorAll('[data-v]')) {
+    const match = el.dataset.v === v;
+    el.style.display = match ? (el.id === 'sec-summaries' ? 'grid' : (el.classList.contains('bento') ? 'grid' : '')) : 'none';
+    if (match && el.style.display === '') el.style.removeProperty('display');
+  }
+  // כרטיסים עם hidden פנימי שומרים על מצבם רק כשהם במסך
+  if (v !== 'ideas') { } // tonight-detail נשלט גם ע"י hidden — display none גובר ממילא
+  for (const x of document.querySelectorAll('[data-vw]')) x.classList.toggle('on', x.dataset.vw === v);
+  scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
 }
+for (const b of document.querySelectorAll('[data-vw]')) b.addEventListener('click', () => showView(b.dataset.vw));
+
+function renderSummaries() {
+  // בחירות: כמה היום + העמוד המוביל
+  const todayCount = SIGNALS.filter(s => sigDates(s.key).has(todayISO())).length;
+  const best = PILLARS.map(pl => ({ pl, s: pillarScore(pl.p).score })).sort((a, b) => b.s - a.s)[0];
+  $('#sum-choices-v').textContent = todayCount;
+  $('#sum-choices-s').textContent = `היום · שיא: ${best.pl.e} ${best.s}`;
+  // רעיונות: מוכחים + המוביל
+  const rated = visibleIdeas().map(i => ({ i, s: stats(i.id) })).filter(x => x.s.n);
+  const proven = rated.filter(x => x.s.n >= 3 && x.s.avg >= 4).length;
+  const top = rated.sort((a, b) => (b.s.avg ?? 0) - (a.s.avg ?? 0))[0];
+  $('#sum-ideas-v').textContent = proven ? `★ ${proven}` : (rated.length ? fmt(top.s.avg) : '—');
+  $('#sum-ideas-s').textContent = top ? top.i.title.slice(0, 26) : 'עוד לא דורג רעיון';
+  // מחקרים: האחרון + כמה דורגו
+  if (Array.isArray(RESEARCH) && RESEARCH.length) {
+    $('#sum-studies-v').textContent = RESEARCH[0].title.length > 40 ? RESEARCH[0].title.slice(0, 39) + '…' : RESEARCH[0].title;
+    const nr = Object.keys(studyRatings()).length;
+    $('#sum-studies-s').textContent = `${RESEARCH.length} מחקרים · ${nr} דורגו`;
+  }
+  // קהילה
+  $('#sum-comm-v').textContent = COMM?.token ? '✓' : '—';
+  $('#sum-comm-s').textContent = COMM?.token ? `מחובר כ-${COMM.name}` : 'הקישו להצטרפות';
+}
+onTap($('#sum-choices'), () => showView('choices'));
+onTap($('#sum-ideas'), () => showView('ideas'));
+onTap($('#sum-studies'), () => showView('studies'));
+onTap($('#sum-comm'), () => showView('community'));
 const hh = new Date().getHours();
 $('#greet').textContent = hh < 5 ? 'לילה טוב' : hh < 12 ? 'בוקר טוב' : hh < 18 ? 'צהריים טובים' : 'ערב טוב';
 $('#hdate').textContent = new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' });
