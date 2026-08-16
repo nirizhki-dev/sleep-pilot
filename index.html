@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>שינה — פיילוט</title>
+<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>מסע ההרגלים — פיילוט</title>
 <style>
   :root[data-sky="day"] {
     color-scheme: light;
@@ -105,7 +105,20 @@
   .affirm-sub { font-size: 0.76rem; color: var(--muted); }
   .affirm-add { position: absolute; top: 14px; left: 16px; font-size: 0.74rem; color: var(--muted); background: none; border: none; cursor: pointer; }
 
+  details.pgroup { border-top: 1px solid var(--hair); }
+  details.pgroup:first-of-type { border-top: none; }
+  details.pgroup summary { list-style: none; display: flex; align-items: center; gap: 10px; padding: 13px 2px; cursor: pointer; }
+  details.pgroup summary::-webkit-details-marker { display: none; }
+  .pname { flex: 1; font-weight: 700; font-size: 0.95rem; }
+  .pscore { font-size: 0.78rem; font-weight: 750; font-variant-numeric: tabular-nums; background: var(--accent-soft); color: var(--accent); border-radius: 99px; padding: 3px 12px; }
+  .pscore.high { background: var(--good-soft); color: var(--good); }
+  .ptoday { font-size: 0.72rem; color: var(--muted); }
+  .pbody { padding: 2px 0 14px; }
   .sigs { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 9px; }
+  .commrow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hair); font-size: 0.85rem; }
+  .commrow:first-of-type { border-top: none; }
+  .commrow .cn { flex: 1; font-weight: 650; }
+  .commrow .cs { font-size: 0.74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
   .sig {
     font: inherit; font-size: 0.83rem; font-weight: 600; cursor: pointer; text-align: right;
     display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-radius: 18px;
@@ -271,9 +284,15 @@
   </button>
 
   <section class="card" id="sec-signals">
-    <h2>כפתורי הלילה שלי</h2>
-    <p class="sub">הקשה אחת על מה שקרה הלילה — בלי טפסים. כל כפתור צובר רצף משלו 🔥</p>
-    <div class="sigs" id="sigs"></div>
+    <h2>ארבעת העמודים שלי</h2>
+    <p class="sub">הקשה אחת על מה שקרה היום — בלי טפסים. כל עמוד צובר ציון הרגל 0–100 (הקישו על הציון להסבר)</p>
+    <div id="pillars"></div>
+  </section>
+
+  <section class="card" id="sec-community">
+    <h2>🌍 הקהילה</h2>
+    <p class="sub">דירוגים משותפים חיים, מעגל הרגל עם חברים, ולוח המאסטרים</p>
+    <div id="comm"></div>
   </section>
 
   <section class="card" id="sec-research">
@@ -385,11 +404,21 @@ const SEED_IDEAS = [
   { id: 'winddown',title: 'טקס ערב של 20 דקות בלי מסכים', how: 'ספר, תה, מוזיקה שקטה — משהו שנעים לחכות לו.', why: 'עונה על הצורך בזמן-לעצמי שמניע דחיינות שינה.', source: 'J. Health Psychology, 2026' },
   { id: 'twomin',  title: 'חוק שתי הדקות', how: 'ההרגל הוא רק "לצחצח שיניים ולהניח את הטלפון" — השאר נגרר.', why: 'מקטין את התלות בכוח רצון מדולדל בסוף היום.', source: 'הרגלים אטומיים; Sleep Med Rev, 2022' },
   { id: 'nevertwice', title: 'לעולם לא מפספסים פעמיים', how: 'ערב אחד נשבר? בסדר. הכלל היחיד: מחר חוזרים.', why: 'החלקה בודדת לא פוגעת בהרגל — נטישה אחריה כן.', source: 'הרגלים אטומיים (עיקרון יישומי)' },
+  { id: 'm-exercise', title: 'תנועה סדירה — ההרגל מספר 1 לשינה', how: '2–3 פעמים בשבוע, גם 20–30 דקות: הליכה מהירה, אימון, ריקוד.', why: 'האפקט הגדול והמשוכפל ביותר במחקר: שיפור של יותר מ-2 נק׳ PSQI ב-22 ניסויים מבוקרים.', source: 'מטא-אנליזה, PMC8215288 (מבוקר)', pillar: 'move' },
+  { id: 'm-mindbody', title: 'גוף-נפש קצר: יוגה או טאי צ׳י', how: '15–30 דקות, אפילו פעמיים בשבוע — סרטון מודרך מספיק.', why: 'מגודלי האפקט הגדולים שנמדדו לשיפור שינה (SMD עד 0.87).', source: 'סקירת 35 סקירות, PMC8196727', pillar: 'move' },
+  { id: 'f-earlydinner', title: 'ארוחה אחרונה 4–5 שעות לפני השינה', how: 'להקדים את ארוחת הערב; אם רעבים אחר כך — משהו קל בלבד.', why: 'ארוחה שעה לפני שינה קיצרה משך ויעילות שינה נמדדים.', source: 'J. Physiological Anthropology, 2026 (crossover)', pillar: 'food' },
+  { id: 'f-water', title: 'מים לאורך היום, פחות בערב', how: 'רוב השתייה עד אחה"צ; להפחית בשעתיים שלפני השינה.', why: 'הידרציה תומכת באנרגיה וריכוז ביום; הפחתה בערב מצמצמת יקיצות שירותים.', source: 'עיקרון יישומי מקובל', pillar: 'food' },
+  { id: 'n-breath', title: 'נשימת 4-7-8 לפני השינה', how: 'שאיפה 4 שניות, החזקה 7, נשיפה 8 — ארבעה סבבים במיטה.', why: 'האטת הנשימה מפעילה את המערכת הפאראסימפתטית; הרפיה היא מרכיב ליבה בהתערבויות המוכחות.', source: 'Sleep Med Rev 2017 — מרכיב הרפיה', pillar: 'mind' },
+  { id: 'n-meditate', title: 'עשר דקות תרגול קשוב ביום', how: 'מדיטציה מודרכת קצרה, בשעה קבועה — עוגן לפני ארוחת צהריים או ערב.', why: 'ניהול לחץ והרפיה הם מהמרכיבים השכיחים בהתערבויות שינה אפקטיביות (g=-0.54).', source: 'Murawski, Sleep Med Rev 2017', pillar: 'mind' },
 ];
 const DEFAULT_DATA = { ideas: SEED_IDEAS, feedback: [], hidden: [], habits: [], settings: {}, signals: [] };
 function loadD() {
-  try { const d = JSON.parse(localStorage.getItem('sleep-pilot')); return { ...JSON.parse(JSON.stringify(DEFAULT_DATA)), ...d }; }
-  catch { return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+  let d;
+  try { d = { ...JSON.parse(JSON.stringify(DEFAULT_DATA)), ...JSON.parse(localStorage.getItem('sleep-pilot')) }; }
+  catch { d = JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+  // מיגרציה: רעיונות-זרע חדשים (עמודים חדשים) מצטרפים גם למשתמשים קיימים
+  for (const s of SEED_IDEAS) if (!d.ideas.some(i => i.id === s.id)) d.ideas.push(s);
+  return d;
 }
 function saveD(d) { localStorage.setItem('sleep-pilot', JSON.stringify(d)); }
 
@@ -446,10 +475,13 @@ function stats(id) {
   return { n: fb.length, avg: fb.length ? fb.reduce((a, b) => a + b.score, 0) / fb.length : null };
 }
 const visibleIdeas = () => DATA.ideas.filter(i => !DATA.hidden.includes(i.id));
-function badge(s) {
-  if (!s.n) return '<span class="badge new">חדש</span>';
-  if (s.n >= 3 && s.avg >= 4) return `<span class="badge proven">★ ${fmt(s.avg)}</span>`;
-  return `<span class="badge">${fmt(s.avg)} · ${s.n}</span>`;
+function badge(s, ideaId) {
+  let b = !s.n ? '<span class="badge new">חדש</span>'
+    : (s.n >= 3 && s.avg >= 4) ? `<span class="badge proven">★ ${fmt(s.avg)}</span>`
+    : `<span class="badge">${fmt(s.avg)} · ${s.n}</span>`;
+  const c = COMM_STATS && ideaId && COMM_STATS[ideaId];
+  if (c) b += ` <span class="badge">🌍 ${c.avg} · ${c.n}</span>`;
+  return b;
 }
 const rateButtons = () => [1, 2, 3, 4, 5].map(v => `<button data-v="${v}" aria-label="דירוג ${v}">${v}</button>`).join('');
 
@@ -611,9 +643,9 @@ async function checkAchievements() {
 function renderHero() {
   const active = DATA.habits.filter(h => h.active);
   const CIRC = 2 * Math.PI * 40;
-  let pct, cap;
-  if (active.length) { const done = active.filter(h => h.history[todayISO()]).length; pct = done / active.length; cap = `הרגלי היום · ${done}/${active.length}`; }
-  else { const tried = visibleIdeas().filter(i => stats(i.id).n).length; pct = visibleIdeas().length ? tried / visibleIdeas().length : 0; cap = `רעיונות שנוסו · ${tried}/${visibleIdeas().length}`; }
+  const activeP = PILLARS.filter(pl => pillarActiveDates(pl.p).has(todayISO())).length;
+  const pct = activeP / PILLARS.length;
+  const cap = `עמודים פעילים היום · ${activeP}/${PILLARS.length}`;
   $('#ringval').textContent = Math.round(pct * 100) + '%';
   $('#ringcap').textContent = cap;
   const fg = $('#ringfg');
@@ -634,6 +666,7 @@ function wireRating(root, idea, onDone) {
   for (const b of root.querySelectorAll('.rate button')) {
     b.onclick = async () => {
       await api('/api/feedback', { ideaId: idea.id, score: +b.dataset.v });
+      if (COMM && COMM.token) commApi('/api/rate', { ideaId: idea.id, score: +b.dataset.v }).catch(() => {});
       root.querySelector('.rate').classList.remove('open');
       root.querySelector('.thanks').textContent = '✓ נרשם';
       toast('⭐ +10 נק׳ — הדירוג נספר'); confetti(); vibrate(30);
@@ -723,7 +756,8 @@ function renderIdeas() {
   for (const { i, s } of sorted) {
     const d = document.createElement('details');
     d.className = 'idea';
-    d.innerHTML = `<summary><span class="ititle2"></span>${badge(s)}<span class="chev">◀</span></summary>
+    const pl = PILLARS.find(x => x.p === (i.pillar || 'sleep'));
+    d.innerHTML = `<summary><span style="font-size:0.95rem">${pl ? pl.e : '😴'}</span><span class="ititle2"></span>${badge(s, i.id)}<span class="chev">◀</span></summary>
       <div class="body"><p class="how"></p><p class="why"></p><p class="src"></p>
       <div class="row"><button class="pill solid tried">ניסיתי — לדרג</button>
       <div class="rate"><span class="q">כמה זה תרם?</span>${rateButtons()}</div>
@@ -760,17 +794,52 @@ $('#affirm-add').onclick = e => {
   };
 };
 
-/* ---- כפתורי לילה ---- */
-const SIGNALS = [
-  { key: 'noscreen', e: '📵', l: 'שעה בלי מסך לפני השינה' },
-  { key: 'easysleep', e: '😴', l: 'נרדמתי בקלות' },
-  { key: 'fresh', e: '☀️', l: 'קמתי רענן' },
-  { key: 'darkroom', e: '🌑', l: 'חדר חשוך וקריר' },
-  { key: 'earlycoffee', e: '☕', l: 'קפה אחרון מוקדם' },
-  { key: 'ritual', e: '🕯️', l: 'עשיתי טקס ערב' },
-  { key: 'daylight', e: '🌿', l: 'הייתי בחוץ באור יום' },
-  { key: 'calm', e: '🧘', l: 'הלכתי לישון רגוע' },
+/* ---- ארבעת העמודים וכפתורי היום ---- */
+const PILLARS = [
+  { p: 'sleep', e: '😴', n: 'שינה' },
+  { p: 'move', e: '🏃', n: 'תנועה' },
+  { p: 'food', e: '🥗', n: 'תזונה' },
+  { p: 'mind', e: '🧘', n: 'מיינד' },
 ];
+const SIGNALS = [
+  { key: 'noscreen', e: '📵', l: 'שעה בלי מסך לפני השינה', pillar: 'sleep' },
+  { key: 'easysleep', e: '😴', l: 'נרדמתי בקלות', pillar: 'sleep' },
+  { key: 'fresh', e: '☀️', l: 'קמתי רענן', pillar: 'sleep' },
+  { key: 'darkroom', e: '🌑', l: 'חדר חשוך וקריר', pillar: 'sleep' },
+  { key: 'earlycoffee', e: '☕', l: 'קפה אחרון מוקדם', pillar: 'sleep' },
+  { key: 'ritual', e: '🕯️', l: 'עשיתי טקס ערב', pillar: 'sleep' },
+  { key: 'steps', e: '🚶', l: 'הליכה / 8000+ צעדים', pillar: 'move' },
+  { key: 'workout', e: '🏋️', l: 'אימון או תנועה מכוונת', pillar: 'move' },
+  { key: 'mindbody', e: '🧎', l: 'יוגה / טאי צ׳י / מתיחות', pillar: 'move' },
+  { key: 'daylight', e: '🌿', l: 'הייתי בחוץ באור יום', pillar: 'move' },
+  { key: 'earlydinner', e: '🍽️', l: 'ארוחה אחרונה מוקדם', pillar: 'food' },
+  { key: 'water', e: '🚰', l: 'שתיתי מים לאורך היום', pillar: 'food' },
+  { key: 'nosugar', e: '🍬', l: 'יום בלי מתוק מעובד', pillar: 'food' },
+  { key: 'mindfuleat', e: '🥗', l: 'אכילה רגועה, בלי מסך', pillar: 'food' },
+  { key: 'meditate', e: '🧘', l: 'מדיטציה / תרגול קשוב', pillar: 'mind' },
+  { key: 'breath', e: '🌬️', l: 'תרגיל נשימה', pillar: 'mind' },
+  { key: 'gratitude', e: '📓', l: 'רגע הכרת תודה', pillar: 'mind' },
+  { key: 'calm', e: '🔕', l: 'זמן שקט בלי גירויים', pillar: 'mind' },
+];
+
+/* ציון הרגל 0–100 לעמוד — נוסחה שקופה */
+function pillarActiveDates(p) {
+  const keys = new Set(SIGNALS.filter(s => s.pillar === p).map(s => s.key));
+  return new Set(DATA.signals.filter(s => keys.has(s.key)).map(s => s.date));
+}
+function pillarScore(p) {
+  const ds = pillarActiveDates(p);
+  const last14 = lastNDates(14);
+  const activeDays = last14.filter(d => ds.has(d)).length;      // עקביות
+  let run = 0;
+  const dd = new Date(todayISO() + 'T12:00:00');
+  if (!ds.has(todayISO())) dd.setDate(dd.getDate() - 1);
+  for (;;) { const k = dd.toLocaleDateString('sv-SE'); if (ds.has(k)) { run++; dd.setDate(dd.getDate() - 1); } else break; }
+  const hist = {}; for (const d of ds) hist[d] = true;
+  const cb = hasComeback(hist);
+  const score = Math.round(activeDays / 14 * 60 + Math.min(run, 10) / 10 * 25 + (cb ? 15 : 0));
+  return { score, activeDays, run, cb };
+}
 const sigDates = key => new Set(DATA.signals.filter(s => s.key === key).map(s => s.date));
 function sigStreak(key) {
   const ds = sigDates(key); let n = 0;
@@ -779,22 +848,53 @@ function sigStreak(key) {
   for (;;) { const k = d.toLocaleDateString('sv-SE'); if (ds.has(k)) { n++; d.setDate(d.getDate() - 1); } else break; }
   return n;
 }
-function renderSignals() {
-  const box = $('#sigs');
+function scoreSheet(pl) {
+  const { score, activeDays, run, cb } = pillarScore(pl.p);
+  openSheet(`
+    <div class="sh-head"><span class="sh-emoji">${pl.e}</span><div><div class="sh-title">ציון ${pl.n}: ${score}</div>
+    <div class="sh-status">נוסחה שקופה — אתם שולטים בכל רכיב</div></div></div>
+    <div class="sh-sec">איך הציון מחושב</div>
+    <div class="sh-row">📅 עקביות: ${activeDays}/14 ימים פעילים <span style="margin-inline-start:auto">${Math.round(activeDays / 14 * 60)}/60</span></div>
+    <div class="sh-row">🔥 רצף נוכחי: ${run} ימים <span style="margin-inline-start:auto">${Math.round(Math.min(run, 10) / 10 * 25)}/25</span></div>
+    <div class="sh-row">💪 חזרה אחרי פספוס <span style="margin-inline-start:auto">${cb ? 15 : 0}/15</span></div>
+    <p class="sh-deep">יום פעיל = לפחות כפתור אחד של העמוד סומן. שלבים: 0–40 מתחיל · 40–70 מתבסס · 70–85 יציב · <b>85+ מועמד למאסטר</b> (החזקה של 8 שבועות = הסמכה).</p>`);
+}
+
+function renderPillars() {
+  const box = $('#pillars');
   box.innerHTML = '';
-  for (const s of SIGNALS) {
-    const on = sigDates(s.key).has(todayISO());
-    const st = sigStreak(s.key);
-    const b = document.createElement('button');
-    b.className = 'sig' + (on ? ' on' : '');
-    b.setAttribute('aria-pressed', on);
-    b.innerHTML = `<span class="se">${s.e}</span><span class="sl">${s.l}</span>${st >= 2 ? `<span class="sk">🔥×${st}</span>` : ''}`;
-    b.onclick = async () => {
-      const r = await api('/api/signals/toggle', { key: s.key, date: todayISO() });
-      if (r.on) { const ns = sigStreak(s.key) + 1; toast(ns >= 3 ? `🔥 לילה ${ns} ברצף — ${s.l}!` : `${s.e} +5 נק׳ — נרשם`); confetti(); vibrate(25); }
-      refresh();
-    };
-    box.appendChild(b);
+  for (const pl of PILLARS) {
+    const { score } = pillarScore(pl.p);
+    const sigs = SIGNALS.filter(s => s.pillar === pl.p);
+    const todayCount = sigs.filter(s => sigDates(s.key).has(todayISO())).length;
+    const det = document.createElement('details');
+    det.className = 'pgroup';
+    det.open = todayCount === 0 && pl.p === 'sleep';
+    det.innerHTML = `
+      <summary>
+        <span style="font-size:1.25rem">${pl.e}</span>
+        <span class="pname">${pl.n} <span class="ptoday">${todayCount ? '· ' + todayCount + ' סומנו היום' : ''}</span></span>
+        <button class="pscore ${score >= 70 ? 'high' : ''}" aria-label="הסבר ציון ${pl.n}">${score}</button>
+        <span class="chev">◀</span>
+      </summary>
+      <div class="pbody"><div class="sigs"></div></div>`;
+    det.querySelector('.pscore').onclick = e => { e.preventDefault(); e.stopPropagation(); scoreSheet(pl); };
+    const grid = det.querySelector('.sigs');
+    for (const s of sigs) {
+      const on = sigDates(s.key).has(todayISO());
+      const st = sigStreak(s.key);
+      const b = document.createElement('button');
+      b.className = 'sig' + (on ? ' on' : '');
+      b.setAttribute('aria-pressed', on);
+      b.innerHTML = `<span class="se">${s.e}</span><span class="sl">${s.l}</span>${st >= 2 ? `<span class="sk">🔥×${st}</span>` : ''}`;
+      b.onclick = async () => {
+        const r = await api('/api/signals/toggle', { key: s.key, date: todayISO() });
+        if (r.on) { const ns = sigStreak(s.key) + 1; toast(ns >= 3 ? `🔥 יום ${ns} ברצף — ${s.l}!` : `${s.e} +5 נק׳ — נרשם`); confetti(); vibrate(25); }
+        refresh();
+      };
+      grid.appendChild(b);
+    }
+    box.appendChild(det);
   }
 }
 function renderResearch() {
@@ -859,9 +959,101 @@ async function renderDailyResearch() {
       <small style="color:var(--muted)">${x.date} · ${x.evidence} · ${x.source}</small></div>`).join('')}`);
 }
 
+/* ---- לקוח הקהילה (שלב 2) ---- */
+const DEFAULT_COMM_URL = 'https://clinical-detect-henderson-refer.trycloudflare.com';
+let COMM = null;
+try { COMM = JSON.parse(localStorage.getItem('community')); } catch {}
+let COMM_STATS = null;
+async function commApi(path, body, method) {
+  const res = await fetch((COMM?.url || DEFAULT_COMM_URL) + path, {
+    method: method || (body ? 'POST' : 'GET'),
+    headers: { 'Content-Type': 'application/json', ...(COMM?.token ? { Authorization: 'Bearer ' + COMM.token } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const j = await res.json();
+  if (!res.ok) throw new Error(j.error || res.status);
+  return j;
+}
+async function commSync() {
+  if (!COMM?.token) return;
+  try {
+    const scores = {};
+    for (const pl of PILLARS) scores[pl.p] = pillarScore(pl.p).score;
+    const today = PILLARS.filter(pl => pillarActiveDates(pl.p).has(todayISO())).length;
+    await commApi('/api/sync', { scores, today });
+    COMM_STATS = await commApi('/api/ideas-stats');
+  } catch { /* לא מקוון — הכול ממשיך לעבוד מקומית */ }
+}
+function renderCommunity() {
+  const box = $('#comm');
+  if (!COMM?.token) {
+    box.innerHTML = `<div class="addidea">
+      <input id="cm-name" placeholder="השם שיוצג לקהילה" maxlength="40">
+      <div class="row"><button class="pill solid" id="cm-join">הצטרפות לקהילה</button>
+      <button class="ghost" id="cm-url">⚙ שרת</button><span class="err" id="cm-err"></span></div>
+      <p class="sub" style="margin:4px 0 0">ההצטרפות משתפת רק: שם, ציוני עמודים ודירוגי רעיונות. שום נתון גולמי לא עוזב את המכשיר.</p></div>`;
+    $('#cm-join').onclick = async () => {
+      const name = $('#cm-name').value.trim();
+      if (!name) return;
+      try {
+        const base = COMM?.url || DEFAULT_COMM_URL;
+        const res = await fetch(base + '/api/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error || res.status);
+        COMM = { url: base, token: j.token, name };
+        localStorage.setItem('community', JSON.stringify(COMM));
+        toast('🌍 ברוכים הבאים לקהילה!'); confetti();
+        await commSync(); renderCommunity(); renderIdeas();
+      } catch (e) { $('#cm-err').textContent = 'החיבור נכשל — ' + e.message; }
+    };
+    $('#cm-url').onclick = () => {
+      const u = prompt('כתובת שרת הקהילה:', COMM?.url || DEFAULT_COMM_URL);
+      if (u) { COMM = { ...(COMM || {}), url: u.trim().replace(/\/$/, '') }; localStorage.setItem('community', JSON.stringify(COMM)); renderCommunity(); }
+    };
+    return;
+  }
+  box.innerHTML = `<p class="sub" style="margin:0 0 10px">מחובר כ-<b>${COMM.name}</b> · הציונים שלך מסתנכרנים, ודירוגי הרעיונות מצטרפים לידע המשותף 🌍</p>
+    <div id="cm-circle"><p class="sub">טוען מעגל…</p></div>
+    <div class="sh-sec">🏆 לוח המאסטרים</div>
+    <div id="cm-masters"><p class="sub">טוען…</p></div>
+    <div class="row" style="margin-top:10px"><button class="ghost" id="cm-leave">התנתקות</button></div>`;
+  $('#cm-leave').onclick = () => { localStorage.removeItem('community'); COMM = null; COMM_STATS = null; renderCommunity(); renderIdeas(); };
+  commApi('/api/circle').then(r => {
+    const el = $('#cm-circle');
+    if (!r.circle) {
+      el.innerHTML = `<div class="row"><button class="pill solid" id="cm-create">יצירת מעגל הרגל</button>
+        <input id="cm-code" placeholder="או קוד הצטרפות" maxlength="8" style="font:inherit;padding:8px 12px;border:none;border-radius:12px;background:var(--card-2);color:var(--ink);width:130px" dir="ltr">
+        <button class="pill" id="cm-joinc">הצטרפות</button></div>`;
+      $('#cm-create').onclick = async () => {
+        const name = prompt('שם המעגל:', 'המעגל שלנו');
+        if (name == null) return;
+        const c = await commApi('/api/circles', { name });
+        toast(`🔵 המעגל נוצר! קוד הזמנה: ${c.code}`); renderCommunity();
+      };
+      $('#cm-joinc').onclick = async () => {
+        try { await commApi('/api/circles/join', { code: $('#cm-code').value }); toast('🔵 הצטרפת למעגל!'); renderCommunity(); }
+        catch (e) { toast(e.message); }
+      };
+    } else {
+      el.innerHTML = `<div class="sh-sec">🔵 ${r.circle.name} <span style="color:var(--muted);font-weight:400">· קוד הזמנה: ${r.circle.code}</span></div>` +
+        r.members.map(m => `<div class="commrow"><span class="cn">${m.name}</span>
+          <span class="cs">${PILLARS.map(pl => `${pl.e}${m.scores?.[pl.p] ?? '–'}`).join(' ')}</span>
+          <span>${m.today ? '🔥' + m.today : ''}</span></div>`).join('');
+    }
+  }).catch(() => { $('#cm-circle').innerHTML = '<p class="sub">השרת לא זמין כרגע — ננסה שוב ברענון הבא.</p>'; });
+  commApi('/api/masters').then(r => {
+    $('#cm-masters').innerHTML = r.masters.length
+      ? r.masters.map(m => `<div class="commrow"><span class="cn">${m.pillars.length ? '👑 ' : ''}${m.name}</span>
+          <span class="cs">${m.pillars.length ? 'מאסטר: ' + m.pillars.map(p => PILLARS.find(x => x.p === p)?.e || p).join(' ') : 'שיא ' + m.best}</span></div>`).join('')
+        + `<p class="sub" style="margin:8px 0 0">${r.note}</p>`
+      : '<p class="sub">עדיין אין מאסטרים — היו הראשונים: ציון 85+ שמוחזק 8 שבועות.</p>';
+  }).catch(() => { $('#cm-masters').innerHTML = ''; });
+}
+
 async function refresh() {
   DATA = await api('/api/data');
-  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderSignals(); renderResearch(); renderDailyResearch();
+  await commSync();
+  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderPillars(); renderResearch(); renderDailyResearch(); renderCommunity();
   $('#avatar').textContent = DATA.settings.avatar || '🌙';
   checkAchievements();
 }
