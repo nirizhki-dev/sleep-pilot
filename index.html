@@ -399,8 +399,9 @@
   </section>
 
   <section class="card" data-v="home" id="sec-journey">
-    <h2>המסע שלי</h2>
-    <p class="sub">כל דירוג, סימון וחזרה אחרי נפילה — מקרבים לדרגה הבאה</p>
+    <h2>המסע שלי — מהלומד אל המנטור</h2>
+    <p class="sub">השאיפה: להיות מנטור וללמד מה עובד לך. כל דירוג, סימון וניסוי — צעד במסלול</p>
+    <div id="mentorpath" style="margin-bottom:14px"></div>
     <div class="level-row"><span class="level-name" id="lv-name"></span><span class="level-pts" id="lv-pts"></span></div>
     <div class="xpbar"><div id="xpfill" style="width:0%"></div></div>
     <div class="xpnext" id="lv-next"></div>
@@ -648,6 +649,8 @@ const ACH = [
   { id: 'comeback', e: '💪', n: 'לא מפספסים פעמיים', won: () => DATA.habits.some(h => hasComeback(h.history)), prog: () => [DATA.habits.some(h => hasComeback(h.history)) ? 1 : 0, 1, 'חזרות'], deep: 'ההישג החשוב ביותר: אשמה על פספוס מזינה את הפספוס הבא. מי שחוזר למחרת ניצח את מנגנון הכישלון המרכזי.' },
   { id: 'signal-3', e: '📿', n: 'שלוש בחירות ברצף', won: () => bestSigRun() >= 3, prog: () => [Math.min(3, bestSigRun()), 3, 'ימים ברצף'], deep: 'בחירה יישומית היא הצהרת בעלות זעירה: "זה קרה כי אני בחרתי". שלושה ימים ברצף של אותה בחירה — הצהרה שהפכה לדפוס, ודפוס שהופך לזהות.' },
   { id: 'researcher', e: '🔬', n: 'חוקר של עצמי', won: hasFinding, prog: () => [hasFinding() ? 1 : 0, 1, 'ממצאים'], deep: 'שיא הגשר: כבר לא "מומחים אומרים" אלא "הנתונים שלי מראים".' },
+  { id: 'teacher', e: '🎓', n: 'לימדתי מה שעבד לי', won: () => (DATA.settings.taughtCount || 0) >= 1, prog: () => [Math.min(1, DATA.settings.taughtCount || 0), 1, 'שיעורים'], deep: 'הדרך הטובה ביותר ללמוד היא ללמד — וההרגל מתקבע הכי חזק כשאתה נהיה המקור שלו. השיעור הראשון שפרסמת הוא הרגע שבו הפכת ממשתמש למנטור.' },
+  { id: 'helper3', e: '🤝', n: 'עזרתי לשלושה', won: () => (DATA.settings.helpedTotal || 0) >= 3, prog: () => [Math.min(3, DATA.settings.helpedTotal || 0), 3, 'חברים שנעזרו'], deep: 'שלושה אנשים סימנו שהשיעור שלך עזר להם בפועל. זו ההוכחה החברתית הראשונה שאתה לא רק מיישם — אתה מקור. מכאן הדרך למאסטר מלווה קצרה.' },
   { id: 'exp-1', e: '🧪', n: 'ניסיתי על עצמי', won: () => (DATA.settings.expLog || []).length >= 1, prog: () => [Math.min(1, (DATA.settings.expLog || []).length), 1, 'ניסויים'], deep: 'ההבדל בין לקרוא מחקר לחיות אותו שבוע — זה ההבדל בין ידע לחוכמה. כל ניסוי שהושלם, גם כזה ש"לא עבד", מלמד אותך מה נכון לגוף שלך.' },
   { id: 'why-set', e: '🎯', n: 'יש לי למה', won: () => !!(DATA.settings.why || '').trim(), prog: () => [(DATA.settings.why || '').trim() ? 1 : 0, 1, 'למה מוגדר'], deep: 'ניטשה: "מי שיש לו למה — יסתדר עם כמעט כל איך". הלמה הוא העוגן שמחזיק את ההרגלים בימים הקשים; מרגע שהוגדר, כל סימון הוא הצבעה בשבילו.' },
 ];
@@ -1155,6 +1158,91 @@ async function commSync() {
     COMM_STATS = await commApi('/api/ideas-stats');
   } catch { /* לא מקוון — הכול ממשיך לעבוד מקומית */ }
 }
+/* ---- מנטורינג: נכסי הלימוד שלי (מחולצים אוטומטית מהנתונים) ---- */
+function teachables() {
+  const out = [];
+  for (const { i, s } of visibleIdeas().map(i => ({ i, s: stats(i.id) })))
+    if (s.n && s.avg >= 4) out.push({ kind: 'רעיון שעבד לי', title: i.title, ev: `דירגתי ${fmt(s.avg)}/5 מניסיון אישי` });
+  for (const e of (DATA.settings.expLog || []).filter(x => x.worked))
+    out.push({ kind: 'ניסוי שהוכיח את עצמו', title: e.title, ev: `${e.days}/7 ימים בניסוי שבועי אישי` });
+  for (const s of SIGNALS) {
+    const hist = {}; for (const d of sigDates(s.key)) hist[d] = true;
+    const r = longestRun(hist);
+    if (r >= 7) out.push({ kind: 'הרגל שהחזיק', title: s.l, ev: `רצף של ${r} ימים בנתונים שלי` });
+  }
+  return out;
+}
+function renderTeach() {
+  const el = $('#cm-teach');
+  if (!el) return;
+  const ts = teachables();
+  if (!ts.length) {
+    el.innerHTML = '<p class="sub" style="margin:0">נכסי הלימוד שלך ייבנו מהנתונים: רעיון שדירגת 4+, ניסוי שעבד, או רצף של 7+ ימים — כל אחד מהם יהפוך לשיעור שאפשר ללמד.</p>';
+    return;
+  }
+  el.innerHTML = ts.slice(0, 6).map((t, k) => `
+    <div class="commrow"><span class="cn">${t.title}<br><small style="color:var(--muted);font-weight:400">${t.kind} · ${t.ev}</small></span>
+    <button class="pill" data-teach="${k}">📤 ללמד</button></div>`).join('');
+  for (const b of el.querySelectorAll('[data-teach]')) {
+    b.onclick = async () => {
+      const t = ts[+b.dataset.teach];
+      const story = prompt(`מה תרצה לספר לחברים על "${t.title}"?\nאיך עשית את זה בפועל? מה היה קשה? מה עזר?`, '');
+      if (story == null) return;
+      try {
+        await commApi('/api/teach', { title: t.title, story, evidence: t.ev });
+        const n = (DATA.settings.taughtCount || 0) + 1;
+        await api('/api/settings', { taughtCount: n });
+        toast('🎓 השיעור פורסם — עכשיו אתה מנטור של מישהו'); confetti(true); vibrate([40, 60, 40]);
+        refresh();
+      } catch (e) { toast('הפרסום נכשל — ' + e.message); }
+    };
+  }
+}
+function renderFeed() {
+  const el = $('#cm-feed');
+  if (!el) return;
+  commApi('/api/teachings').then(async r => {
+    if (DATA.settings.helpedTotal !== r.myHelped) await api('/api/settings', { helpedTotal: r.myHelped });
+    if (!r.feed.length) { el.innerHTML = '<p class="sub" style="margin:0">עוד אין שיעורים — היה הראשון שמלמד את המעגל מה עובד.</p>'; return; }
+    el.innerHTML = r.feed.map(t => `
+      <div class="commrow" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <div style="display:flex;gap:8px;width:100%;align-items:baseline"><b>${t.title}</b>
+          <span class="cs" style="margin-inline-start:auto">${t.name}${t.mine ? ' (אני)' : ''} · ${t.date}</span></div>
+        ${t.story ? `<span style="font-size:0.84rem;color:var(--ink-2)">"${t.story}"</span>` : ''}
+        <div style="display:flex;gap:8px;align-items:center;width:100%">
+          <span class="badge">📊 ${t.evidence}</span>
+          ${t.mine ? `<span class="cs" style="margin-inline-start:auto">🤝 עזר ל-${t.helpedN}</span>`
+            : `<button class="pill ${t.iHelped ? 'done' : ''}" data-helped="${t.id}" ${t.iHelped ? 'disabled' : ''} style="margin-inline-start:auto">🤝 ${t.iHelped ? 'עזר לי' : 'זה עזר לי'}${t.helpedN ? ' · ' + t.helpedN : ''}</button>`}
+        </div>
+      </div>`).join('');
+    for (const b of el.querySelectorAll('[data-helped]:not([disabled])')) {
+      b.onclick = async () => {
+        await commApi('/api/teachings/helped', { id: b.dataset.helped });
+        toast('🤝 סימנת — המנטור מקבל את הקרדיט'); vibrate(20);
+        renderFeed();
+      };
+    }
+  }).catch(() => { el.innerHTML = '<p class="sub">השרת לא זמין כרגע.</p>'; });
+}
+
+/* ---- מסלול המנטור: שש מדרגות ---- */
+function renderMentorPath() {
+  const el = $('#mentorpath');
+  if (!el) return;
+  const steps = [
+    ['🎯', 'יש לי למה', !!myWhy()],
+    ['⭐', 'רעיון שהוכח עליי (דירוג 4+)', visibleIdeas().some(i => { const s = stats(i.id); return s.n && s.avg >= 4; })],
+    ['🧪', 'ניסוי שבועי שהושלם', (DATA.settings.expLog || []).length >= 1],
+    ['🎓', 'שיעור ראשון פורסם למעגל', (DATA.settings.taughtCount || 0) >= 1],
+    ['🤝', 'השיעורים שלי עזרו ל-3 חברים', (DATA.settings.helpedTotal || 0) >= 3],
+    ['👑', 'מועמד מאסטר: ציון 85+ בעמוד', PILLARS.some(pl => pillarScore(pl.p).score >= 85)],
+  ];
+  const done = steps.filter(s => s[2]).length;
+  el.innerHTML = `<div class="xpbar"><div style="width:${Math.round(done / steps.length * 100)}%"></div></div>
+    <div class="xpnext">מסלול המנטור · ${done}/${steps.length}</div>
+    ${steps.map(([e, n, ok]) => `<div class="sh-row" style="padding:5px 0;font-size:0.84rem;${ok ? '' : 'opacity:0.55'}">${ok ? '✅' : '⬜'} ${e} ${n}</div>`).join('')}`;
+}
+
 function renderCommunity() {
   const box = $('#comm');
   if (!COMM?.token) {
@@ -1185,9 +1273,14 @@ function renderCommunity() {
   }
   box.innerHTML = `<p class="sub" style="margin:0 0 10px">מחובר כ-<b>${COMM.name}</b> · הציונים שלך מסתנכרנים, ודירוגי הרעיונות מצטרפים לידע המשותף 🌍</p>
     <div id="cm-circle"><p class="sub">טוען מעגל…</p></div>
-    <div class="sh-sec">🏆 לוח המאסטרים</div>
+    <div class="sh-sec">🎓 ללמד מה שעובד לי</div>
+    <div id="cm-teach"></div>
+    <div class="sh-sec">📖 מה עובד לחברים</div>
+    <div id="cm-feed"><p class="sub">טוען…</p></div>
+    <div class="sh-sec">🏆 לוח המנטורים</div>
     <div id="cm-masters"><p class="sub">טוען…</p></div>
     <div class="row" style="margin-top:10px"><button class="ghost" id="cm-leave">התנתקות</button></div>`;
+  renderTeach(); renderFeed();
   $('#cm-leave').onclick = () => { localStorage.removeItem('community'); COMM = null; COMM_STATS = null; renderCommunity(); renderIdeas(); };
   commApi('/api/circle').then(r => {
     const el = $('#cm-circle');
@@ -1215,9 +1308,9 @@ function renderCommunity() {
   commApi('/api/masters').then(r => {
     $('#cm-masters').innerHTML = r.masters.length
       ? r.masters.map(m => `<div class="commrow"><span class="cn">${m.pillars.length ? '👑 ' : ''}${m.name}</span>
-          <span class="cs">${m.pillars.length ? 'מאסטר: ' + m.pillars.map(p => PILLARS.find(x => x.p === p)?.e || p).join(' ') : 'שיא ' + m.best}</span></div>`).join('')
-        + `<p class="sub" style="margin:8px 0 0">${r.note}</p>`
-      : '<p class="sub">עדיין אין מאסטרים — היו הראשונים: ציון 85+ שמוחזק 8 שבועות.</p>';
+          <span class="cs">${m.helped ? `🤝 עזר ל-${m.helped} · ` : ''}${m.taught ? `🎓 ${m.taught} שיעורים · ` : ''}${m.pillars.length ? 'מאסטר: ' + m.pillars.map(p => PILLARS.find(x => x.p === p)?.e || p).join(' ') : 'שיא ' + m.best}</span></div>`).join('')
+        + `<p class="sub" style="margin:8px 0 0">${r.note} · הדירוג לפי כמה עזרת בפועל</p>`
+      : '<p class="sub">עדיין אין מנטורים — היה הראשון: פרסם שיעור ממה שעבד לך.</p>';
   }).catch(() => { $('#cm-masters').innerHTML = ''; });
 }
 
@@ -1584,7 +1677,7 @@ $('#r-skip').onclick = () => { clearTimeout(breathTimer); stopRitualAudio(); $('
 async function refresh() {
   DATA = await api('/api/data');
   await commSync();
-  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderPillars(); renderResearch(); renderDailyResearch(); renderCommunity(); renderWhy(); renderSummaries(); renderMoment(); renderExp(); renderMedia(); applyBigText();
+  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderPillars(); renderResearch(); renderDailyResearch(); renderCommunity(); renderWhy(); renderSummaries(); renderMoment(); renderExp(); renderMedia(); applyBigText(); renderMentorPath();
   $('#avatar').textContent = DATA.settings.avatar || '🌙';
   showView(VIEW);
   checkAchievements();
