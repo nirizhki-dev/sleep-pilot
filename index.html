@@ -1,4 +1,11 @@
 <!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>מסע ההרגלים — פיילוט</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#101b30">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="הרגלים">
 <style>
   :root[data-sky="day"] {
     color-scheme: light;
@@ -258,6 +265,7 @@
     </div>
     <span class="pilot-tag">פיילוט</span>
     <button id="bigtext" aria-label="הגדלת טקסט" style="font:inherit;font-weight:800;background:var(--card);border:1px solid var(--hair);color:var(--ink-2);border-radius:12px;padding:6px 11px;cursor:pointer">Aa</button>
+    <button id="installbtn" hidden style="font:inherit;font-weight:700;background:linear-gradient(135deg,var(--accent-deep),var(--accent));border:none;color:#fff;border-radius:12px;padding:6px 13px;cursor:pointer">⬇ התקנה</button>
   </header>
 
   <div class="bento" data-v="home">
@@ -1851,6 +1859,26 @@ function drawSky() {
 drawSky();
 setInterval(drawSky, 60000);
 addEventListener('resize', drawSky);
+
+/* ---- PWA: התקנה + עבודה אופליין ---- */
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+let deferredInstall = null;
+addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstall = e;
+  $('#installbtn').hidden = false;
+});
+$('#installbtn').onclick = async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  const { outcome } = await deferredInstall.userChoice;
+  if (outcome === 'accepted') { toast('📱 מותקן! חפשו את אייקון הירח במסך הבית'); confetti(true); }
+  deferredInstall = null;
+  $('#installbtn').hidden = true;
+};
+addEventListener('appinstalled', () => { $('#installbtn').hidden = true; toast('🌙 האפליקציה על מסך הבית — נתראה שם'); });
 
 refresh();
 </script>
