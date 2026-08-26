@@ -392,9 +392,9 @@
     <p class="why" id="td-why" style="font-size:0.8rem;color:var(--ink-2);margin:0 0 4px"></p>
     <p class="src" id="td-src" style="font-size:0.72rem;color:var(--muted);margin:0 0 12px"></p>
     <div class="row">
-      <button class="pill solid tried">ניסיתי — לדרג</button>
+      <button class="pill solid tried">לחקור</button>
       <div class="rate"><span class="q">כמה זה תרם?</span><span id="td-rate"></span></div>
-      <button class="pill adopt">אמץ כהרגל</button>
+      <button class="pill adopt">אפקטיביות ההרגל</button>
       <span class="thanks"></span>
     </div>
   </section>
@@ -864,9 +864,9 @@ function renderIdeas() {
     const pl = PILLARS.find(x => x.p === (i.pillar || 'sleep'));
     d.innerHTML = `<summary><span style="font-size:0.95rem">${pl ? pl.e : '😴'}</span><span class="ititle2"></span>${badge(s, i.id)}<span class="chev">◀</span></summary>
       <div class="body"><p class="how"></p><p class="why"></p><p class="src"></p>
-      <div class="row"><button class="pill solid tried">ניסיתי — לדרג</button>
+      <div class="row"><button class="pill solid tried">לחקור</button>
       <div class="rate"><span class="q">כמה זה תרם?</span>${rateButtons()}</div>
-      <button class="pill adopt">אמץ כהרגל</button>
+      <button class="pill adopt">אפקטיביות ההרגל</button>
       <button class="ghost hide">לא רלוונטי לי</button><span class="thanks"></span></div></div>`;
     d.querySelector('.ititle2').textContent = i.title;
     d.querySelector('.how').textContent = i.how;
