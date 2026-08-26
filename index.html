@@ -234,6 +234,34 @@
   .statgrid .sv { font-size: 1.35rem; font-weight: 780; }
   .statgrid .sl { font-size: 0.7rem; color: var(--muted); }
 
+  /* ---- אריחי בנטו ---- */
+  .btile {
+    border-radius: 26px; padding: 16px 18px; border: none; cursor: pointer; font: inherit;
+    text-align: right; color: var(--ink); background: var(--card); box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 4px; min-height: 118px; position: relative; overflow: hidden;
+  }
+  .btile .bt-e { position: absolute; top: 14px; left: 14px; font-size: 1.3rem; opacity: 0.9; }
+  .btile .bt-l { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+  .btile .bt-v { font-size: 1.9rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .btile .bt-s { font-size: 0.74rem; color: var(--ink-2); }
+  .btile .bt-word { font-size: 0.8rem; font-weight: 750; }
+  .t-coral { background: linear-gradient(150deg, #b3532f, #d2703f); color: #fff; }
+  .t-coral .bt-l, .t-coral .bt-s { color: rgba(255,255,255,0.8); }
+  .t-indigo { background: linear-gradient(150deg, #4f42d8, #7a6cf0); color: #fff; }
+  .t-indigo .bt-l, .t-indigo .bt-s { color: rgba(255,255,255,0.82); }
+  .t-pink { background: linear-gradient(150deg, #a83a76, #d0568f); color: #fff; }
+  .t-pink .bt-l, .t-pink .bt-s { color: rgba(255,255,255,0.82); }
+  .t-green { background: linear-gradient(150deg, #1e6e50, #2f9a70); color: #fff; }
+  .t-green .bt-l, .t-green .bt-s { color: rgba(255,255,255,0.82); }
+  .t-gold { background: linear-gradient(150deg, #8a6a1f, #c29b3a); color: #fff; }
+  .t-gold .bt-l, .t-gold .bt-s { color: rgba(255,255,255,0.85); }
+  .bt-bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,0.22); overflow: hidden; margin-top: 6px; }
+  .bt-bar > div { height: 100%; border-radius: 99px; background: #fff; }
+  .btile:not([class*="t-"]) .bt-bar { background: var(--ring-track); }
+  .btile:not([class*="t-"]) .bt-bar > div { background: var(--accent); }
+  .gaugebox { display: flex; align-items: center; gap: 12px; }
+  .gaugebox svg { width: 64px; height: 64px; transform: rotate(-90deg); flex: none; }
+
   /* ---- טקסים ---- */
   #ritual { position: fixed; inset: 0; z-index: 30; background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom)); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 8vh 8vw; gap: 3vh; }
   #ritual[hidden] { display: none; }
@@ -324,28 +352,7 @@
     <span class="affirm-sub">נשימה עמוקה · שרירים רפויים · הקש למשפט הבא</span>
   </button>
 
-  <section data-v="home" id="sec-summaries" style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
-    <button class="card mini clickable" id="sum-choices" style="align-items:flex-start;text-align:right">
-      <div class="cap" style="text-align:right">🎯 בחירות יישומיות</div>
-      <div class="big" id="sum-choices-v" style="font-size:1.4rem">0</div>
-      <div class="cap" id="sum-choices-s" style="text-align:right"></div>
-    </button>
-    <button class="card mini clickable" id="sum-ideas" style="align-items:flex-start;text-align:right">
-      <div class="cap" style="text-align:right">💡 רעיונות</div>
-      <div class="big" id="sum-ideas-v" style="font-size:1.4rem">—</div>
-      <div class="cap" id="sum-ideas-s" style="text-align:right"></div>
-    </button>
-    <button class="card mini clickable" id="sum-studies" style="align-items:flex-start;text-align:right">
-      <div class="cap" style="text-align:right">🔬 מחקרים</div>
-      <div class="big" id="sum-studies-v" style="font-size:1.05rem;line-height:1.3;font-weight:700">טוען…</div>
-      <div class="cap" id="sum-studies-s" style="text-align:right"></div>
-    </button>
-    <button class="card mini clickable" id="sum-comm" style="align-items:flex-start;text-align:right">
-      <div class="cap" style="text-align:right">🌍 קהילה</div>
-      <div class="big" id="sum-comm-v" style="font-size:1.4rem">—</div>
-      <div class="cap" id="sum-comm-s" style="text-align:right"></div>
-    </button>
-  </section>
+  <section data-v="home" id="sec-summaries" style="display:grid;grid-template-columns:1fr 1fr;gap:13px"></section>
 
   <section class="card" data-v="choices" id="sec-signals">
     <h2>הבחירות היישומיות שלי</h2>
@@ -1726,32 +1733,84 @@ function showView(v) {
 }
 for (const b of document.querySelectorAll('[data-vw]')) b.addEventListener('click', () => showView(b.dataset.vw));
 
-function renderSummaries() {
-  // בחירות: כמה היום + העמוד המוביל
-  const todayCount = SIGNALS.filter(s => sigDates(s.key).has(todayISO())).length;
-  const best = PILLARS.map(pl => ({ pl, s: pillarScore(pl.p).score })).sort((a, b) => b.s - a.s)[0];
-  $('#sum-choices-v').textContent = todayCount;
-  $('#sum-choices-s').textContent = `היום · שיא: ${best.pl.e} ${best.s}`;
-  // רעיונות: מוכחים + המוביל
-  const rated = visibleIdeas().map(i => ({ i, s: stats(i.id) })).filter(x => x.s.n);
-  const proven = rated.filter(x => x.s.n >= 3 && x.s.avg >= 4).length;
-  const top = rated.sort((a, b) => (b.s.avg ?? 0) - (a.s.avg ?? 0))[0];
-  $('#sum-ideas-v').textContent = proven ? `★ ${proven}` : (rated.length ? fmt(top.s.avg) : '—');
-  $('#sum-ideas-s').textContent = top ? top.i.title.slice(0, 26) : 'עוד לא דורג רעיון';
-  // מחקרים: האחרון + כמה דורגו
-  if (Array.isArray(RESEARCH) && RESEARCH.length) {
-    $('#sum-studies-v').textContent = RESEARCH[0].title.length > 40 ? RESEARCH[0].title.slice(0, 39) + '…' : RESEARCH[0].title;
-    const nr = Object.keys(studyRatings()).length;
-    $('#sum-studies-s').textContent = `${RESEARCH.length} מחקרים · ${nr} דורגו`;
-  }
-  // קהילה
-  $('#sum-comm-v').textContent = COMM?.token ? '✓' : '—';
-  $('#sum-comm-s').textContent = COMM?.token ? `מחובר כ-${COMM.name}` : 'הקישו להצטרפות';
+/* ---- סולם ההרגל: קל מאוד → קל → חזק → פרו → מאסטר ---- */
+const LADDER = [
+  { min: 0, name: 'קל מאוד', e: '🌱', tip: 'גרסת שתי הדקות: המטרה היא רק להופיע. סמנו גם על מעט.' },
+  { min: 3, name: 'קל', e: '🍃', tip: 'זה מתחיל לזרום — שמרו על אותו גודל, אל תגדילו עדיין.' },
+  { min: 7, name: 'הרגל חזק', e: '💪', tip: 'שבוע ברצף! מכאן אפשר להרחיב בעדינות את ההיקף.' },
+  { min: 21, name: 'הרגל פרו', e: '🏆', tip: 'שלושה שבועות — ההרגל חלק מהזהות. שמרו עליו גם בימים חריגים.' },
+  { min: 56, name: 'הרגל מאסטר', e: '👑', tip: 'שמונה שבועות — הרף של ללמד אחרים: פרסמו שיעור למעגל.' },
+];
+function habitLevel(run) {
+  let li = 0;
+  while (li + 1 < LADDER.length && run >= LADDER[li + 1].min) li++;
+  return { ...LADDER[li], idx: li, next: LADDER[li + 1] || null };
 }
-onTap($('#sum-choices'), () => showView('choices'));
-onTap($('#sum-ideas'), () => showView('ideas'));
-onTap($('#sum-studies'), () => showView('studies'));
-onTap($('#sum-comm'), () => showView('community'));
+function topHabitForLadder() {
+  const hs = DATA.habits.filter(h => h.active).map(h => ({ h, run: longestRun(h.history) }));
+  const sigs = SIGNALS.map(s => { const hist = {}; for (const d of sigDates(s.key)) hist[d] = true; return { l: s.l, run: longestRun(hist) }; });
+  const all = [...hs.map(x => ({ name: x.h.name, run: x.run })), ...sigs.map(x => ({ name: x.l, run: x.run }))];
+  return all.sort((a, b) => b.run - a.run)[0] || null;
+}
+function ladderScreen() {
+  const top = topHabitForLadder();
+  const run = top ? top.run : 0;
+  const lv = habitLevel(run);
+  openSheet(`
+    <div class="sh-head"><span class="sh-emoji">${lv.e}</span>
+      <div><div class="sh-title">סולם ההרגל</div>
+      <div class="sh-status">${top && run > 0 ? `"${top.name}" · שיא ${run} ימים · ${lv.name}` : 'מתחילים מהרגל שקל מאוד ליישם'}</div></div></div>
+    <p class="sh-deep">${lv.tip}</p>
+    ${lv.next ? progBar(run - lv.min, lv.next.min - lv.min) + `<div class="xpnext">עוד ${lv.next.min - run} ימים ל"${lv.next.name}" ${lv.next.e}</div>` : '<div class="xpnext">🎓 הגעת לרף ללמד — עברו לקהילה ופרסמו שיעור</div>'}
+    <div class="sh-sec">חמש המדרגות</div>
+    ${LADDER.map((s, k) => `<div class="sh-row" style="${k === lv.idx ? 'font-weight:750' : 'opacity:0.6'}">${k < lv.idx ? '✅' : k === lv.idx ? '👉' : '⬜'} ${s.e} ${s.name} <small style="margin-inline-start:auto;color:var(--muted)">${s.min}+ ימים</small></div>`).join('')}
+    <p class="sh-deep" style="margin-top:12px">העיקרון: מתחילים כל כך קטן שאי אפשר להיכשל, וכשזה נהיה קל — מטפסים מדרגה. המאסטר הוא לא מי שהתאמץ הכי הרבה, אלא מי שנשאר הכי הרבה זמן.</p>
+    ${!top || run < 1 ? '<div class="row" style="margin-top:8px"><button class="pill solid" id="lad-start">🌱 בחר הרגל קל מאוד</button></div>' : ''}`);
+  const b = $('#lad-start');
+  if (b) b.onclick = () => { closeSheet(); showView('ideas'); };
+}
+
+const scoreWord = s => s >= 85 ? ['מאסטר!', '#ffd97a'] : s >= 70 ? ['מעולה', '#7dffc4'] : s >= 40 ? ['טוב מאוד', '#a9c7ff'] : ['מתחילים יפה', ''];
+
+function renderSummaries() {
+  const box = $('#sec-summaries');
+  const todayP = PILLARS.filter(pl => pillarActiveDates(pl.p).has(todayISO())).length;
+  const best = PILLARS.map(pl => ({ pl, s: pillarScore(pl.p).score })).sort((a, b) => b.s - a.s)[0];
+  const [word, wc] = scoreWord(best.s);
+  const streakN = Math.max(0, ...DATA.habits.filter(h => h.active).map(streak), bestSigRun());
+  const top = topHabitForLadder();
+  const lv = habitLevel(top ? top.run : 0);
+  const arc = (v, max) => { const C = 2 * Math.PI * 26; return `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="7"/><circle cx="32" cy="32" r="26" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.min(1, v / max))}"/></svg>`; };
+  const latest = Array.isArray(RESEARCH) && RESEARCH.length ? RESEARCH[0].title : 'טוען…';
+  box.innerHTML = `
+    <button class="btile" id="bt-choices"><span class="bt-e">🎯</span>
+      <span class="bt-l">בחירות היום</span><span class="bt-v">${todayP}/${PILLARS.length}</span>
+      <span class="bt-s">עמודים פעילים</span><div class="bt-bar"><div style="width:${Math.round(todayP / PILLARS.length * 100)}%"></div></div>
+      ${todayP >= 3 ? '<span class="bt-word">יום חזק! 💫</span>' : ''}</button>
+    <button class="btile t-indigo" id="bt-score"><span class="bt-e">${best.pl.e}</span>
+      <span class="bt-l">ציון ${best.pl.n}</span>
+      <div class="gaugebox">${arc(best.s, 100)}<div><span class="bt-v">${best.s}</span><br><span class="bt-word" style="color:${wc || '#fff'}">${word}</span></div></div></button>
+    <button class="btile t-coral" id="bt-streak"><span class="bt-e">🔥</span>
+      <span class="bt-l">רצף</span><span class="bt-v">${streakN}</span>
+      <span class="bt-s">${streakN >= 3 ? 'ממשיכים — זו כבר זהות' : 'כל יום הוא הצבעה'}</span></button>
+    <button class="btile t-gold" id="bt-ladder"><span class="bt-e">${lv.e}</span>
+      <span class="bt-l">סולם ההרגל</span><span class="bt-v" style="font-size:1.25rem">${lv.name}</span>
+      <span class="bt-s">${lv.next ? `עוד ${Math.max(0, lv.next.min - (top ? top.run : 0))} ימים ל${lv.next.name}` : 'הרף של ללמד אחרים'}</span>
+      ${lv.next ? `<div class="bt-bar"><div style="width:${Math.round(((top ? top.run : 0) - lv.min) / (lv.next.min - lv.min) * 100)}%"></div></div>` : ''}</button>
+    <button class="btile t-pink" id="bt-studies"><span class="bt-e">🔬</span>
+      <span class="bt-l">מחקר היום</span>
+      <span class="bt-s" style="font-size:0.86rem;font-weight:650;color:#fff">${latest.length > 48 ? latest.slice(0, 47) + '…' : latest}</span>
+      <span class="bt-s">${Array.isArray(RESEARCH) ? RESEARCH.length + ' מחקרים בספרייה' : ''}</span></button>
+    <button class="btile t-green" id="bt-comm"><span class="bt-e">🌍</span>
+      <span class="bt-l">קהילה</span><span class="bt-v" style="font-size:1.25rem">${COMM?.token ? COMM.name : 'הצטרפו'}</span>
+      <span class="bt-s">${COMM?.token ? 'מחובר · השיעורים מחכים' : 'מעגלים, שיעורים ומנטורים'}</span></button>`;
+  onTap($('#bt-choices'), () => showView('choices'));
+  onTap($('#bt-score'), () => scoreSheet(best.pl));
+  onTap($('#bt-streak'), streakScreen);
+  onTap($('#bt-ladder'), ladderScreen);
+  onTap($('#bt-studies'), () => showView('studies'));
+  onTap($('#bt-comm'), () => showView('community'));
+}
 const hh = new Date().getHours();
 $('#greet').textContent = hh < 5 ? 'לילה טוב' : hh < 12 ? 'בוקר טוב' : hh < 18 ? 'צהריים טובים' : 'ערב טוב';
 $('#hdate').textContent = new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -1827,6 +1886,36 @@ function drawSky() {
   sg.addColorStop(0, cssc(mixc(hor, sea, 0.35))); sg.addColorStop(0.25, cssc(sea)); sg.addColorStop(1, cssc(mixc(sea, [0, 0, 0], 0.45)));
   ctx.fillStyle = sg; ctx.fillRect(0, horizonY, W, H - horizonY);
   ctx.fillStyle = `rgba(${hor.join(',')},0.6)`; ctx.fillRect(0, horizonY - 1, W, 2);
+
+  // יום: גלים נעים בים + רצועת חול עם קצף
+  if (isDay) {
+    const tsec = reduceMotion() ? 0 : performance.now() / 1000;
+    const sandTop = H * 0.955;
+    for (let k = 0; k < 4; k++) {
+      const wy = horizonY + (k + 1) * (sandTop - horizonY) / 5.2;
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 7) {
+        const yy = wy + Math.sin(x * 0.025 + tsec * (1.1 + k * 0.25) + k * 2.1) * (1.8 + k * 1.1);
+        x === 0 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy);
+      }
+      ctx.strokeStyle = `rgba(255,255,255,${0.10 + k * 0.035})`;
+      ctx.lineWidth = 1.4 + k * 0.5;
+      ctx.stroke();
+    }
+    const sd = ctx.createLinearGradient(0, sandTop, 0, H);
+    sd.addColorStop(0, '#e5d3a6'); sd.addColorStop(1, '#cdb083');
+    ctx.fillStyle = sd;
+    ctx.beginPath();
+    ctx.moveTo(0, H); ctx.lineTo(0, sandTop + 4);
+    for (let x = 0; x <= W; x += 9) ctx.lineTo(x, sandTop + 4 + Math.sin(x * 0.02 + tsec * 0.9) * 3.2);
+    ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 9) {
+      const yy = sandTop + 3 + Math.sin(x * 0.02 + tsec * 0.9) * 3.2;
+      x === 0 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 2.2; ctx.stroke(); // קו הקצף
+  }
   if (sunX != null && sunAlt < 0.55) {
     const a = (0.55 - sunAlt) * 0.75;
     for (let i = 0; i < 22; i++) {
@@ -1840,6 +1929,35 @@ function drawSky() {
   if (nowMin > ss + 10) nf = Math.min(1, (nowMin - ss - 10) / 70);
   else if (nowMin < sr - 10) nf = Math.min(1, (sr - 10 - nowMin) / 70 + 0.6, 1);
   if (nf > 0) {
+    // שביל החלב: רצועה אלכסונית זוהרת עם אבק כוכבים
+    ctx.save();
+    ctx.translate(W * 0.5, H * 0.32);
+    ctx.rotate(-0.5);
+    const mw = ctx.createLinearGradient(0, -H * 0.09, 0, H * 0.09);
+    mw.addColorStop(0, 'rgba(190,200,255,0)');
+    mw.addColorStop(0.5, `rgba(205,212,255,${(0.10 * nf).toFixed(3)})`);
+    mw.addColorStop(1, 'rgba(190,200,255,0)');
+    ctx.fillStyle = mw;
+    ctx.fillRect(-W * 0.85, -H * 0.09, W * 1.7, H * 0.18);
+    for (let i = 0; i < 90; i++) {
+      const mx = ((i * 61.7) % 100) / 100 * W * 1.6 - W * 0.8;
+      const my = (((i * 37.3) % 100) / 100 - 0.5) * H * 0.13;
+      ctx.beginPath(); ctx.arc(mx, my, 0.7 + (i % 3) * 0.35, 0, 7);
+      ctx.fillStyle = `rgba(255,255,255,${(nf * (0.15 + (i % 5) * 0.08)).toFixed(3)})`; ctx.fill();
+    }
+    ctx.restore();
+    // גלקסיה קטנה (אנדרומדה שלנו)
+    const gx = W * 0.18, gy = H * 0.2;
+    ctx.save();
+    ctx.translate(gx, gy); ctx.rotate(0.6);
+    for (const [rw, rh, a] of [[26, 9, 0.10], [16, 5.5, 0.16], [7, 2.6, 0.3]]) {
+      const gg = ctx.createRadialGradient(0, 0, 0, 0, 0, rw);
+      gg.addColorStop(0, `rgba(220,215,255,${(a * nf).toFixed(3)})`);
+      gg.addColorStop(1, 'rgba(220,215,255,0)');
+      ctx.fillStyle = gg;
+      ctx.save(); ctx.scale(1, rh / rw); ctx.beginPath(); ctx.arc(0, 0, rw, 0, 7); ctx.fill(); ctx.restore();
+    }
+    ctx.restore();
     const nightProg = nowMin > ss ? (nowMin - ss) / (1440 - ss + sr) : (nowMin + 1440 - ss) / (1440 - ss + sr);
     for (const s of SKY_STARS) {
       const alpha = Math.max(0, Math.min(1, (nf - s.order) * 3)) * (0.45 + 0.55 * s.tw);
@@ -1856,8 +1974,18 @@ function drawSky() {
     ctx.globalAlpha = 1;
   }
 }
-drawSky();
-setInterval(drawSky, 60000);
+let LAST_ISDAY = false;
+(function skyLoop() {
+  drawSky();
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const { sunrise: sr, sunset: ss } = sunTimes(now);
+  LAST_ISDAY = nowMin >= sr && nowMin < ss;
+  // ביום הגלים נעים (~12fps); בלילה/מוסתר/העדפת פחות-תנועה — עדכון דקתי
+  const delay = (!reduceMotion() && !document.hidden && LAST_ISDAY) ? 85 : 60000;
+  setTimeout(() => requestAnimationFrame(skyLoop), delay);
+})();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) drawSky(); });
 addEventListener('resize', drawSky);
 
 /* ---- PWA: התקנה + עבודה אופליין ---- */
