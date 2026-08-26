@@ -685,6 +685,63 @@ $('#sheet .close').onclick = closeSheet;
 $('#sheet .backdrop').onclick = closeSheet;
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 const progBar = (cur, max) => `<div class="xpbar"><div style="width:${Math.round(cur / max * 100)}%"></div></div>`;
+
+/* ---- דיאלוגים מעוצבים (במקום prompt של הדפדפן) ---- */
+function askSheet(title, sub, placeholder, def = '') {
+  return new Promise(resolve => {
+    openSheet(`
+      <div class="sh-head"><span class="sh-emoji">✍️</span>
+        <div><div class="sh-title">${title}</div><div class="sh-status">${sub}</div></div></div>
+      <div class="addidea" style="margin-top:8px">
+        <input id="ask-in" placeholder="${placeholder}" maxlength="120">
+        <div class="row"><button class="pill solid" id="ask-ok">אישור</button>
+        <button class="ghost" id="ask-cancel">ביטול</button></div>
+      </div>`);
+    const inp = $('#ask-in');
+    inp.value = def; inp.focus();
+    $('#ask-ok').onclick = () => { const v = inp.value.trim(); closeSheet(); resolve(v || null); };
+    inp.onkeydown = e => { if (e.key === 'Enter') $('#ask-ok').click(); };
+    $('#ask-cancel').onclick = () => { closeSheet(); resolve(null); };
+  });
+}
+
+/* כוונת יישום קלילה: בוחרים עוגן בהקשה — המשפט נבנה לבד */
+const TRIGGERS = ['אחרי הקפה של הבוקר', 'אחרי ארוחת הערב', 'כשנגמר הפרק', 'לפני צחצוח השיניים', 'כשאני מגיע הביתה', 'מיד אחרי ההתעוררות', 'כשמתחיל להחשיך', 'אחרי האימון'];
+function intentSheet(habitTitle) {
+  return new Promise(resolve => {
+    let sel = 0;
+    openSheet(`
+      <div class="sh-head"><span class="sh-emoji">🎯</span>
+        <div><div class="sh-title">מתי זה יקרה?</div>
+        <div class="sh-status">מצמידים את ההרגל החדש לפעולה שכבר קיימת — הקשה אחת</div></div></div>
+      <div class="sigs" id="it-chips" style="margin:10px 0">
+        ${TRIGGERS.map((t, k) => `<button class="sig ${k === 0 ? 'on' : ''}" data-k="${k}"><span class="sl">${t}</span></button>`).join('')}
+      </div>
+      <input id="it-free" class="pill" style="width:100%;background:var(--card-2);color:var(--ink);text-align:right" placeholder="או עוגן במילים שלך…" maxlength="60">
+      <div style="background:var(--accent-soft);border-radius:16px;padding:12px 15px;margin:12px 0;font-size:0.95rem" id="it-prev"></div>
+      <div class="row">
+        <button class="pill solid" id="it-ok">✓ זו הכוונה שלי</button>
+        <button class="ghost" id="it-skip">בלי כוונה כרגע</button>
+      </div>`);
+    const prev = () => {
+      const trig = $('#it-free').value.trim() || TRIGGERS[sel];
+      $('#it-prev').textContent = `${trig} — אני ${habitTitle}`;
+      return `${trig} — אני ${habitTitle}`;
+    };
+    prev();
+    for (const b of document.querySelectorAll('#it-chips .sig')) {
+      b.onclick = () => {
+        sel = +b.dataset.k;
+        $('#it-free').value = '';
+        for (const x of document.querySelectorAll('#it-chips .sig')) x.classList.toggle('on', +x.dataset.k === sel);
+        prev(); vibrate(15);
+      };
+    }
+    $('#it-free').oninput = prev;
+    $('#it-ok').onclick = () => { const p = prev(); closeSheet(); resolve(p); };
+    $('#it-skip').onclick = () => { closeSheet(); resolve(''); };
+  });
+}
 function achScreen(a) {
   const won = a.won(); const [cur, max, unit] = a.prog();
   openSheet(`<div class="sh-head"><span class="sh-emoji">${a.e}</span><div><div class="sh-title">${a.n}</div>
@@ -788,10 +845,14 @@ function wireRating(root, idea, onDone) {
   if (adopt) {
     if (DATA.habits.some(h => h.active && h.ideaId === idea.id)) adopt.remove();
     else adopt.onclick = async () => {
-      const plan = prompt('כוונת יישום — מתי ואחרי מה בדיוק?\n"ב-[שעה], אחרי [פעולה קיימת], אני..."', `בשעה ___, אחרי ___, אני ${idea.title}`);
+      const plan = await intentSheet(idea.title);
       if (plan == null) return;
-      try { await api('/api/habits', { name: idea.title, plan, ideaId: idea.id }); refresh(); }
-      catch (e) { $('#habiterr').textContent = e.message; }
+      try {
+        await api('/api/habits', { name: idea.title, plan, ideaId: idea.id });
+        toast('🎯 ההרגל אומץ — מתחילים מקל מאוד'); confetti(); vibrate(25);
+        refresh();
+      }
+      catch (e) { toast(e.message); }
     };
   }
 }
@@ -919,8 +980,8 @@ function renderWhy() {
     </div>`;
   box.querySelector('#why-wall').onclick = genWallpaper;
   box.querySelector('#why-edit').onclick = async () => { await api('/api/settings', { why: '' }); refresh(); };
-  box.querySelector('#why-remind').onclick = () => {
-    const time = prompt('באיזו שעה להזכיר לך את הלמה, כל יום?', DATA.settings.whyReminderTime || '21:00');
+  box.querySelector('#why-remind').onclick = async () => {
+    const time = await askSheet('תזכורת הלמה', 'באיזו שעה להזכיר, כל יום?', '21:00', DATA.settings.whyReminderTime || '21:00');
     if (!time || !/^\d{1,2}:\d{2}$/.test(time.trim())) return;
     api('/api/settings', { whyReminderTime: time.trim() });
     const d = new Date(); d.setDate(d.getDate() + 1);
@@ -1201,7 +1262,7 @@ function renderTeach() {
   for (const b of el.querySelectorAll('[data-teach]')) {
     b.onclick = async () => {
       const t = ts[+b.dataset.teach];
-      const story = prompt(`מה תרצה לספר לחברים על "${t.title}"?\nאיך עשית את זה בפועל? מה היה קשה? מה עזר?`, '');
+      const story = await askSheet(`ללמד: ${t.title}`, 'איך עשית את זה בפועל? מה היה קשה? מה עזר?', 'הסיפור שלך במשפט-שניים…');
       if (story == null) return;
       try {
         await commApi('/api/teach', { title: t.title, story, evidence: t.ev });
@@ -1304,7 +1365,7 @@ function renderCommunity() {
         <input id="cm-code" placeholder="או קוד הצטרפות" maxlength="8" style="font:inherit;padding:8px 12px;border:none;border-radius:12px;background:var(--card-2);color:var(--ink);width:130px" dir="ltr">
         <button class="pill" id="cm-joinc">הצטרפות</button></div>`;
       $('#cm-create').onclick = async () => {
-        const name = prompt('שם המעגל:', 'המעגל שלנו');
+        const name = await askSheet('מעגל הרגל חדש', 'שם קצר שהחברים יזהו', 'למשל: המשפחה, חברים לדרך…', 'המעגל שלנו');
         if (name == null) return;
         const c = await commApi('/api/circles', { name });
         toast(`🔵 המעגל נוצר! קוד הזמנה: ${c.code}`); renderCommunity();
