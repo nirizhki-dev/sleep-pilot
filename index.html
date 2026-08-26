@@ -807,7 +807,7 @@ const GLYPHS = ['🌙','☀️','📵','🛁','☕','🧊','⏰','📖','🫧','
 function renderHabits() {
   const box = $('#habits');
   const active = DATA.habits.filter(h => h.active);
-  if (!active.length) { box.innerHTML = '<p class="sub" style="margin:0">עוד אין הרגלים — נסו רעיון, ואם תרם, "אמץ כהרגל".</p>'; return; }
+  if (!active.length) { box.innerHTML = '<p class="sub" style="margin:0">עוד אין הרגלים — נסו רעיון, ואם תרם, הקישו "אפקטיביות ההרגל".</p>'; return; }
   box.innerHTML = '';
   active.forEach((h, idx) => {
     const days = lastNDates(14);
