@@ -222,8 +222,22 @@
   .sh-sec { font-size: 0.78rem; font-weight: 700; color: var(--muted); letter-spacing: 0.06em; margin: 18px 0 8px; }
   .sh-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hair); font-size: 0.88rem; }
   .sh-row:first-of-type { border-top: none; }
-  /* אווטארים מנטליים */
+  /* אווטארים מנטליים + שפת סמלים אחידה: נכס פרימיום היכן שיש, צ'יפ כהה עם glow לשאר */
   .avimg { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .pico { width: 30px; height: 30px; border-radius: 9px; object-fit: cover; flex: none; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .pico.sm { width: 24px; height: 24px; border-radius: 7px; }
+  .bt-e img { width: 36px; height: 36px; border-radius: 11px; object-fit: cover; display: block; box-shadow: 0 2px 10px rgba(0,0,0,0.35); }
+  .shimg { width: 54px; height: 54px; border-radius: 16px; object-fit: cover; display: block; }
+  .sig .se, .find .fe, .bdg .e, .sh-emoji {
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+    width: 36px; height: 36px; border-radius: 11px; font-size: 1.05rem; line-height: 1;
+    background: radial-gradient(circle at 50% 36%, #26345c 0%, #141b33 62%, #0d1223 100%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.25);
+  }
+  .bdg .e { width: 42px; height: 42px; border-radius: 13px; font-size: 1.3rem; }
+  .sh-emoji { width: 54px; height: 54px; border-radius: 16px; font-size: 1.8rem; }
+  .sh-emoji .avimg, .sh-emoji .shimg { border-radius: 16px; }
+  .habit .glyph { background: radial-gradient(circle at 50% 36%, #26345c 0%, #141b33 62%, #0d1223 100%); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06); color: #f1f2f7; }
   .avgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
   .avgrid .av { font: inherit; border: 2px solid transparent; background: var(--card-2); border-radius: 18px; padding: 7px 7px 9px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--ink-2); }
   .avgrid .av img { width: 100%; aspect-ratio: 1; border-radius: 13px; object-fit: cover; }
@@ -781,6 +795,10 @@ const AVATARS = [
   { id: 'selflove', n: 'אהבה עצמית' }, { id: 'breath', n: 'נשימה' },   { id: 'witness', n: 'עדות פנימית' },
 ];
 const avatarOf = v => AVATARS.find(a => 'av:' + a.id === v);
+/* אותה משפחת עיצוב לכל סמלי האפליקציה: מיפוי עמודים ונושאים לנכסי האווטארים */
+const PILLAR_AV = { sleep: 'calm', move: 'flow', food: 'grounding', mind: 'presence', digital: 'witness' };
+const THEME_AV = { move: 'flow', light: 'vitality', food: 'grounding', env: 'stability', digital: 'witness', mind: 'presence', sleepcore: 'calm' };
+const aimg = (id, cls = 'pico') => `<img class="${cls}" src="./avatars/${id}.png" alt="" loading="lazy">`;
 // ערכי אימוג'י ישנים ממשיכים לעבוד — נופלים חזרה לטקסט
 const avatarHTML = v => { const a = avatarOf(v); return a ? `<img class="avimg" src="./avatars/${a.id}.png" alt="${a.n}">` : (v || '🌙'); };
 function avatarScreen() {
@@ -968,7 +986,7 @@ function renderIdeas() {
     d.className = 'idea';
     d.dataset.idea = i.id;
     const pl = PILLARS.find(x => x.p === (i.pillar || 'sleep'));
-    d.innerHTML = `<summary><span style="font-size:0.95rem">${pl ? pl.e : '😴'}</span><span class="ititle2"></span>${badge(s, i.id)}<span class="chev">◀</span></summary>
+    d.innerHTML = `<summary>${aimg(PILLAR_AV[i.pillar || 'sleep'] || 'calm', 'pico sm')}<span class="ititle2"></span>${badge(s, i.id)}<span class="chev">◀</span></summary>
       <div class="body"><p class="how"></p><p class="why"></p><p class="src"></p>
       <div class="row"><button class="pill solid tried">לחקור</button>
       <div class="rate"><span class="q">כמה זה תרם?</span>${rateButtons()}</div>
@@ -1128,7 +1146,7 @@ function sigStreak(key) {
 function scoreSheet(pl) {
   const { score, activeDays, run, cb } = pillarScore(pl.p);
   openSheet(`
-    <div class="sh-head"><span class="sh-emoji">${pl.e}</span><div><div class="sh-title">ציון ${pl.n}: ${score}</div>
+    <div class="sh-head"><span class="sh-emoji">${aimg(PILLAR_AV[pl.p], 'shimg')}</span><div><div class="sh-title">ציון ${pl.n}: ${score}</div>
     <div class="sh-status">נוסחה שקופה — אתם שולטים בכל רכיב</div></div></div>
     <div class="sh-sec">איך הציון מחושב</div>
     <div class="sh-row">📅 עקביות: ${activeDays}/14 ימים פעילים <span style="margin-inline-start:auto">${Math.round(activeDays / 14 * 60)}/60</span></div>
@@ -1149,7 +1167,7 @@ function renderPillars() {
     det.open = todayCount === 0 && pl.p === 'sleep';
     det.innerHTML = `
       <summary>
-        <span style="font-size:1.25rem">${pl.e}</span>
+        ${aimg(PILLAR_AV[pl.p])}
         <span class="pname">${pl.n} <span class="ptoday">${todayCount ? '· ' + todayCount + ' סומנו היום' : ''}</span></span>
         <button class="pscore ${score >= 70 ? 'high' : ''}" aria-label="הסבר ציון ${pl.n}">${score}</button>
         <span class="chev">◀</span>
@@ -1485,7 +1503,7 @@ function renderStudies() {
     const d = document.createElement('details');
     d.className = 'idea';
     d.innerHTML = `
-      <summary><span style="font-size:0.95rem">${t.e}</span><span class="ititle2"></span>
+      <summary>${aimg(THEME_AV[t.k] || 'calm', 'pico sm')}<span class="ititle2"></span>
         ${my ? `<span class="badge proven">${'★'.repeat(my)}</span>` : '<span class="badge new">לא דורג</span>'}
         <span class="chev">◀</span></summary>
       <div class="body">
@@ -1956,25 +1974,25 @@ function renderSummaries() {
   const arc = (v, max) => { const C = 2 * Math.PI * 26; return `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="7"/><circle cx="32" cy="32" r="26" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.min(1, v / max))}"/></svg>`; };
   const latest = Array.isArray(RESEARCH) && RESEARCH.length ? RESEARCH[0].title : 'טוען…';
   box.innerHTML = `
-    <button class="btile" id="bt-choices"><span class="bt-e">🎯</span>
+    <button class="btile" id="bt-choices"><span class="bt-e">${aimg('awareness')}</span>
       <span class="bt-l">בחירות היום</span><span class="bt-v">${todayP}/${PILLARS.length}</span>
       <span class="bt-s">עמודים פעילים</span><div class="bt-bar"><div style="width:${Math.round(todayP / PILLARS.length * 100)}%"></div></div>
       ${todayP >= 3 ? '<span class="bt-word">יום חזק! 💫</span>' : ''}</button>
-    <button class="btile t-indigo" id="bt-score"><span class="bt-e">${best.pl.e}</span>
+    <button class="btile t-indigo" id="bt-score"><span class="bt-e">${aimg(PILLAR_AV[best.pl.p])}</span>
       <span class="bt-l">ציון ${best.pl.n}</span>
       <div class="gaugebox">${arc(best.s, 100)}<div><span class="bt-v">${best.s}</span><br><span class="bt-word" style="color:${wc || '#fff'}">${word}</span></div></div></button>
-    <button class="btile t-coral" id="bt-streak"><span class="bt-e">🔥</span>
+    <button class="btile t-coral" id="bt-streak"><span class="bt-e">${aimg('innerpower')}</span>
       <span class="bt-l">רצף</span><span class="bt-v">${streakN}</span>
       <span class="bt-s">${streakN >= 3 ? 'ממשיכים — זו כבר זהות' : 'כל יום הוא הצבעה'}</span></button>
-    <button class="btile t-gold" id="bt-ladder"><span class="bt-e">${lv.e}</span>
+    <button class="btile t-gold" id="bt-ladder"><span class="bt-e">${aimg('growth')}</span>
       <span class="bt-l">סולם ההרגל</span><span class="bt-v" style="font-size:1.25rem">${lv.name}</span>
       <span class="bt-s">${lv.next ? `עוד ${Math.max(0, lv.next.min - (top ? top.run : 0))} ימים ל${lv.next.name}` : 'הרף של ללמד אחרים'}</span>
       ${lv.next ? `<div class="bt-bar"><div style="width:${Math.round(((top ? top.run : 0) - lv.min) / (lv.next.min - lv.min) * 100)}%"></div></div>` : ''}</button>
-    <button class="btile t-pink" id="bt-studies"><span class="bt-e">🔬</span>
+    <button class="btile t-pink" id="bt-studies"><span class="bt-e">${aimg('clearself')}</span>
       <span class="bt-l">מחקר היום</span>
       <span class="bt-s" style="font-size:0.86rem;font-weight:650;color:#fff">${latest.length > 48 ? latest.slice(0, 47) + '…' : latest}</span>
       <span class="bt-s">${Array.isArray(RESEARCH) ? RESEARCH.length + ' מחקרים בספרייה' : ''}</span></button>
-    <button class="btile t-green" id="bt-comm"><span class="bt-e">🌍</span>
+    <button class="btile t-green" id="bt-comm"><span class="bt-e">${aimg('compassion')}</span>
       <span class="bt-l">קהילה</span><span class="bt-v" style="font-size:1.25rem">${COMM?.token ? COMM.name : 'הצטרפו'}</span>
       <span class="bt-s">${COMM?.token ? 'מחובר · השיעורים מחכים' : 'מעגלים, שיעורים ומנטורים'}</span></button>`;
   onTap($('#bt-choices'), () => showView('choices'));
