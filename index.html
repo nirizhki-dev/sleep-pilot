@@ -222,6 +222,15 @@
   .sh-sec { font-size: 0.78rem; font-weight: 700; color: var(--muted); letter-spacing: 0.06em; margin: 18px 0 8px; }
   .sh-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hair); font-size: 0.88rem; }
   .sh-row:first-of-type { border-top: none; }
+  /* אווטארים מנטליים */
+  .avimg { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .avgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+  .avgrid .av { font: inherit; border: 2px solid transparent; background: var(--card-2); border-radius: 18px; padding: 7px 7px 9px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--ink-2); }
+  .avgrid .av img { width: 100%; aspect-ratio: 1; border-radius: 13px; object-fit: cover; }
+  .avgrid .av span { font-size: 0.68rem; line-height: 1.15; text-align: center; }
+  .avgrid .av.sel { border-color: var(--accent); color: var(--accent); }
+  .sh-emoji .avimg { border-radius: 16px; aspect-ratio: 1; }
+
   .emgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; margin: 8px 0; }
   .emgrid button { font-size: 1.35rem; padding: 8px 0; border-radius: 14px; border: none; cursor: pointer; background: var(--card-2); }
   .emgrid button:hover, .emgrid button.sel { background: var(--accent-soft); outline: 2px solid var(--accent); }
@@ -759,10 +768,36 @@ function emojiPicker(current, onPick) {
     wire(root) { for (const b of root.querySelectorAll('.emgrid button')) b.onclick = () => onPick(b.dataset.e); }
   };
 }
+
+/* ---- אווטארים מנטליים: בחירת מצב פנימי (הנכסים ב-avatars/) ---- */
+const AVATARS = [
+  { id: 'calm', n: 'שלווה' },       { id: 'presence', n: 'נוכחות' },   { id: 'acceptance', n: 'קבלה' },
+  { id: 'awareness', n: 'מודעות' }, { id: 'flow', n: 'זרימה' },        { id: 'growth', n: 'צמיחה' },
+  { id: 'innerpower', n: 'כוח פנימי' }, { id: 'clarity', n: 'בהירות' }, { id: 'release', n: 'שחרור' },
+  { id: 'compassion', n: 'חמלה' },  { id: 'renewal', n: 'התחדשות' },   { id: 'reflection', n: 'התבוננות' },
+  { id: 'quiet', n: 'שקט' },        { id: 'space', n: 'מרחב' },        { id: 'lightness', n: 'קלילות' },
+  { id: 'stability', n: 'יציבות' }, { id: 'grounding', n: 'קרקוע' },   { id: 'vitality', n: 'חיוניות' },
+  { id: 'change', n: 'שינוי' },     { id: 'journey', n: 'מסע' },       { id: 'clearself', n: 'עצמי צלול' },
+  { id: 'selflove', n: 'אהבה עצמית' }, { id: 'breath', n: 'נשימה' },   { id: 'witness', n: 'עדות פנימית' },
+];
+const avatarOf = v => AVATARS.find(a => 'av:' + a.id === v);
+// ערכי אימוג'י ישנים ממשיכים לעבוד — נופלים חזרה לטקסט
+const avatarHTML = v => { const a = avatarOf(v); return a ? `<img class="avimg" src="./avatars/${a.id}.png" alt="${a.n}">` : (v || '🌙'); };
 function avatarScreen() {
-  const p = emojiPicker(DATA.settings.avatar || '🌙', async e => { await api('/api/settings', { avatar: e }); closeSheet(); toast(`${e} האווטאר עודכן`); refresh(); });
-  openSheet(`<div class="sh-head"><span class="sh-emoji">${DATA.settings.avatar || '🌙'}</span><div><div class="sh-title">האווטאר שלי</div><div class="sh-status">בחר סמל שמרגיש שלך</div></div></div>${p.html}`);
-  p.wire($('#sheet-body'));
+  const cur = DATA.settings.avatar || '🌙';
+  openSheet(`<div class="sh-head"><span class="sh-emoji" style="width:54px">${avatarHTML(cur)}</span>
+    <div><div class="sh-title">האווטאר שלי</div><div class="sh-status">מי אני היום? בחר מצב פנימי</div></div></div>
+    <div class="avgrid">${AVATARS.map(a => `
+      <button class="av ${cur === 'av:' + a.id ? 'sel' : ''}" data-a="${a.id}" aria-label="${a.n}">
+        <img src="./avatars/${a.id}.png" alt="" loading="lazy"><span>${a.n}</span>
+      </button>`).join('')}</div>`);
+  for (const b of $('#sheet-body').querySelectorAll('.av')) {
+    b.onclick = async () => {
+      const a = AVATARS.find(x => x.id === b.dataset.a);
+      await api('/api/settings', { avatar: 'av:' + a.id });
+      closeSheet(); toast(`✨ ${a.n} — המצב הפנימי של היום`); vibrate(20); refresh();
+    };
+  }
 }
 function habitScreen(h) {
   const idea = DATA.ideas.find(i => i.id === h.ideaId);
@@ -1811,7 +1846,7 @@ function renderAll() {
   const steps = [renderHero, renderTonight, renderHabits, renderJourney, renderIdeas, renderAffirm,
     renderPillars, renderResearch, renderDailyResearch, renderCommunity, renderWhy, renderSummaries,
     renderMoment, renderExp, renderMedia, applyBigText, renderMentorPath,
-    () => { $('#avatar').textContent = DATA.settings.avatar || '🌙'; }];
+    () => { $('#avatar').innerHTML = avatarHTML(DATA.settings.avatar); }];
   for (const fn of steps) {
     try { fn(); } catch (e) { console.error('render step failed:', fn.name || 'anon', e); }
   }
