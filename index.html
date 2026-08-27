@@ -1806,14 +1806,24 @@ $('#r-next').onclick = async () => {
 };
 $('#r-skip').onclick = () => { clearTimeout(breathTimer); stopRitualAudio(); $('#ritual').hidden = true; };
 
+/* כל כרטיס מתרנדר בתא מבודד — תקלה באחד לא מפילה את השאר ולא את המסך */
+function renderAll() {
+  const steps = [renderHero, renderTonight, renderHabits, renderJourney, renderIdeas, renderAffirm,
+    renderPillars, renderResearch, renderDailyResearch, renderCommunity, renderWhy, renderSummaries,
+    renderMoment, renderExp, renderMedia, applyBigText, renderMentorPath,
+    () => { $('#avatar').textContent = DATA.settings.avatar || '🌙'; }];
+  for (const fn of steps) {
+    try { fn(); } catch (e) { console.error('render step failed:', fn.name || 'anon', e); }
+  }
+}
 async function refresh() {
   DATA = await api('/api/data');
   await commSync();
-  renderHero(); renderTonight(); renderHabits(); renderJourney(); renderIdeas(); renderAffirm(); renderPillars(); renderResearch(); renderDailyResearch(); renderCommunity(); renderWhy(); renderSummaries(); renderMoment(); renderExp(); renderMedia(); applyBigText(); renderMentorPath();
-  $('#avatar').textContent = DATA.settings.avatar || '🌙';
+  renderAll();
   showView(VIEW);
-  checkAchievements();
+  try { checkAchievements(); } catch (e) { console.error(e); }
 }
+addEventListener('error', e => console.error('uncaught:', e.message, e.filename, e.lineno));
 $('#avatar').onclick = () => avatarScreen();
 $('#addbtn').onclick = async () => {
   const title = $('#ntitle').value.trim(); if (!title) return;
@@ -1829,11 +1839,22 @@ onTap($('#tile-ring'), () => {
     <p class="sh-deep">הטבעת נסגרת כשכל ההרגלים סומנו. היא מתאפסת כל בוקר — כל יום הוא הצבעה חדשה.</p>
     ${active.map(h => `<div class="sh-row">${h.history[todayISO()] ? '✅' : '⬜'} ${h.name}</div>`).join('')}`);
 });
-onTap($('#tile-streak'), () => {
-  openSheet(`<div class="sh-head"><span class="sh-emoji">🔥</span><div><div class="sh-title">הרצפים שלך</div>
-    <div class="sh-status">שיא: ${Math.max(bestRun(), bestSigRun())} ימים</div></div></div>
-    <p class="sh-deep">רצף הוא תגמול מיידי על התנהגות שהפרס שלה מגיע באיחור. וחשוב ממנו: <b>לעולם לא מפספסים פעמיים</b>.</p>`);
-});
+/* מסך הרצפים המלא — נפתח גם מהאריח הקטן וגם מאריח הסיכום */
+function streakScreen() {
+  const active = DATA.habits.filter(h => h.active);
+  const sigRuns = SIGNALS.map(s => { const hist = {}; for (const d of sigDates(s.key)) hist[d] = true; return { s, now: sigStreak(s.key), best: longestRun(hist) }; })
+    .filter(x => x.best > 0).sort((a, b) => b.now - a.now || b.best - a.best).slice(0, 5);
+  openSheet(`
+    <div class="sh-head"><span class="sh-emoji">🔥</span>
+      <div><div class="sh-title">הרצפים שלך</div>
+      <div class="sh-status">שיא כל הזמנים: ${Math.max(bestRun(), bestSigRun())} ימים</div></div></div>
+    <p class="sh-deep">רצף הוא התגמול המיידי על התנהגות שהפרס האמיתי שלה (שינה טובה) מגיע באיחור. וחשוב מהרצף עצמו: <b>לעולם לא מפספסים פעמיים</b> — יום אחד שנפל לא מוחק כלום, נטישה אחריו כן.</p>
+    ${active.length ? '<div class="sh-sec">לפי הרגל</div>' + active.map(h => `<div class="sh-row"><span style="flex:1">${h.name}</span><span>🔥 ${streak(h)} עכשיו · שיא ${longestRun(h.history)}</span></div>`).join('') : ''}
+    ${sigRuns.length ? '<div class="sh-sec">לפי בחירה יישומית</div>' + sigRuns.map(x => `<div class="sh-row"><span style="flex:1">${x.s.e} ${x.s.l}</span><span>🔥 ${x.now} · שיא ${x.best}</span></div>`).join('') : ''}
+    <div class="sh-sec">אבני הדרך</div>
+    ${['streak-3', 'streak-7'].map(id => { const a = ACH.find(x => x.id === id); return `<div class="sh-row">${a.won() ? '✅' : '⬜'} ${a.e} ${a.n}</div>`; }).join('')}`);
+}
+onTap($('#tile-streak'), streakScreen);
 /* ---- מנוע מסכים: בית = שיאים; כל נושא נפתח למסך העמקה ---- */
 let VIEW = 'home';
 function showView(v) {
@@ -1996,10 +2017,12 @@ function drawRealMoon(ctx, x, y, r, opts = {}) {
     o.beginPath(); o.arc(cx, cy, cr, 0, 7); o.fill();
   }
   // מחיקת הצד החשוך לשקיפות — טרמינטור רך, נשאר שמץ earthshine
+  // בגדלים קטנים (אריח, שמי האפליקציה) סהר דק נעלם — wide נותן סהר עבה וקריא
   o.globalCompositeOperation = 'destination-out';
-  const sx = ox - r * 0.5, sy = oy - r * 0.22, sr = r * 1.25;
+  const [dx, dy, rr, er] = opts.wide ? [0.62, 0.26, 1.06, 0.9] : [0.5, 0.22, 1.25, 0.94];
+  const sx = ox - r * dx, sy = oy - r * dy, sr = r * rr;
   const sg = o.createRadialGradient(sx, sy, sr * 0.78, sx, sy, sr);
-  sg.addColorStop(0, 'rgba(0,0,0,0.94)');
+  sg.addColorStop(0, `rgba(0,0,0,${er})`);
   sg.addColorStop(1, 'rgba(0,0,0,0)');
   o.fillStyle = sg;
   o.beginPath(); o.arc(sx, sy, sr, 0, 7); o.fill();
@@ -2011,7 +2034,7 @@ function tileMoonURL() {
   if (MOON_TILE_URL) return MOON_TILE_URL;
   const s = 148, cv = document.createElement('canvas');
   cv.width = s; cv.height = s;
-  drawRealMoon(cv.getContext('2d'), s * 0.52, s * 0.5, s * 0.3, { halo: 0.9, haloR: s * 0.48 });
+  drawRealMoon(cv.getContext('2d'), s * 0.52, s * 0.5, s * 0.3, { halo: 1.1, haloR: s * 0.48, wide: true });
   return MOON_TILE_URL = cv.toDataURL();
 }
 function skyPalette(nowMin, sr, ss) {
@@ -2144,7 +2167,7 @@ function drawSky() {
       ctx.beginPath(); ctx.arc(s.x * W, y, s.r, 0, 7);
       ctx.fillStyle = `rgba(242,240,233,${alpha.toFixed(3)})`; ctx.fill();
     }
-    drawRealMoon(ctx, W * 0.82, H * 0.14, 24, { alpha: nf, halo: 0.85 * nf });
+    drawRealMoon(ctx, W * 0.82, H * 0.14, 24, { alpha: nf, halo: 0.85 * nf, wide: true });
   }
   // אריח הירח: בלילה — הירח הריאליסטי; ביום — השמש מה-CSS
   const moonEl = document.querySelector('#moon-tile .moon');
