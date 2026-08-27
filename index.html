@@ -1,4 +1,5 @@
 <title>מסע ההרגלים — פיילוט</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#0e162c">
 <link rel="apple-touch-icon" href="./icon-192.png">
@@ -8,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="הרגלים">
 <style>
   :root[data-sky="day"] {
-    color-scheme: light;
+    color-scheme: only light; /* "only" חוסם היפוך צבעים של מצב-כהה-כפוי באנדרואיד — עיצוב היום נשאר בהיר */
     --bg-top: #cfe4f7; --bg-bottom: #eef4fa;
     --card: #ffffff; --card-2: #f0f4f9;
     --ink: #171927; --ink-2: #4e5468; --muted: #8a90a3;
@@ -33,7 +34,6 @@
     --nav-bg: rgba(30,32,42,0.82);
     --shadow: 0 8px 28px rgba(0,0,0,0.35);
   }
-  :root[data-sky="day"] { color-scheme: light; }
   :root[data-sky="day"] .greet, :root[data-sky="day"] .hdate { text-shadow: 0 1px 8px rgba(255,255,255,0.55); }
   .greet, .hdate { text-shadow: 0 1px 10px rgba(7,9,16,0.45); }
 
