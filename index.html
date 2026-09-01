@@ -89,12 +89,60 @@
   .moon-tile .eyebrow { font-size: 0.7rem; letter-spacing: 0.1em; opacity: 0.85; font-weight: 600; }
   .moon-tile .ititle { font-size: 1.18rem; font-weight: 760; margin-top: 6px; display: block; }
   .moon-tile .cta { font-size: 0.78rem; opacity: 0.9; margin-top: 10px; display: block; }
+  /* גרסה צרה — שורת "הרעיון להערב" במסך היום */
+  .moon-tile.slim { min-height: 0; display: flex; flex-direction: row; align-items: center; gap: 13px; padding: 13px 16px; width: 100%; }
+  .moon-tile.slim .moon { position: static; width: 50px; height: 50px; flex: none; }
+  .moon-tile.slim .tinfo { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .moon-tile.slim .ititle { font-size: 0.98rem; margin: 0; }
+  .moon-tile.slim .chev { color: rgba(255,255,255,0.65); }
 
-  .mini { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 16px 14px; cursor: pointer; border: none; font: inherit; color: var(--ink); }
-  .mini .big { font-size: 1.85rem; font-weight: 790; font-variant-numeric: tabular-nums; line-height: 1.05; }
-  .mini .cap { font-size: 0.72rem; color: var(--muted); text-align: center; }
-  .mini .flame { color: var(--coral); }
-  .ringbox { position: relative; width: 96px; height: 96px; }
+  /* ---- לוח "היום שלי" ---- */
+  .b-top { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .b-top h2 { font-size: 1.05rem; font-weight: 780; margin: 0; }
+  .b-top .sub { margin: 2px 0 0; }
+  .b-head { flex: 1; }
+  .streakchip {
+    font: inherit; font-size: 0.95rem; font-weight: 780; cursor: pointer; border: none; color: var(--coral);
+    background: var(--card-2); border-radius: 16px; padding: 10px 14px; display: flex; align-items: center; gap: 5px;
+  }
+  .trow {
+    font: inherit; width: 100%; display: flex; align-items: center; gap: 12px; cursor: pointer; text-align: right;
+    background: var(--card-2); color: var(--ink); border: 2px solid transparent; border-radius: 18px;
+    padding: 12px 14px; margin-bottom: 9px;
+  }
+  .trow .tinfo { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+  .trow b { font-size: 0.95rem; }
+  .trow .tmark { display: flex; align-items: center; gap: 8px; }
+  .trow .tmark i { font-style: normal; font-size: 0.8rem; color: var(--coral); font-weight: 750; }
+  .trow .tmark em { font-style: normal; font-weight: 800; color: var(--good); font-size: 1.05rem; }
+  .trow .tmark em.todo { color: var(--accent); font-size: 0.82rem; font-weight: 700; }
+  .trow.on { border-color: var(--good); background: var(--good-soft); }
+  .sig.tall { flex-direction: row; align-items: center; padding: 11px 13px; }
+  .sig.tall .sl { line-height: 1.3; }
+  .dots.wk { gap: 3px; margin-top: 4px; }
+  .dots.wk span { width: 6.5px; height: 6.5px; }
+  @keyframes donePulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 rgba(233,203,158,0); }
+    35% { transform: scale(1.045); box-shadow: 0 0 22px rgba(233,203,158,0.5); }
+    100% { transform: scale(1); box-shadow: 0 0 0 rgba(233,203,158,0); }
+  }
+  .justdone { animation: donePulse 0.65s ease; }
+  @media (prefers-reduced-motion: reduce) { .justdone { animation: none; } }
+
+  /* ברכת פתיחה יומית */
+  #greet-splash {
+    position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
+    background: rgba(7,10,20,0.72); backdrop-filter: blur(10px); opacity: 1; transition: opacity 0.5s;
+  }
+  #greet-splash[hidden] { display: none; }
+  #greet-splash.bye { opacity: 0; }
+  .gs-box { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 30px; }
+  .gs-icon { width: 84px; height: 84px; display: block; }
+  .gs-icon .avimg { border-radius: 24px; box-shadow: 0 0 44px rgba(233,203,158,0.3); }
+  .gs-title { font-size: 1.35rem; font-weight: 780; color: #f2ead9; }
+  .gs-sub { font-size: 0.9rem; color: rgba(199,194,183,0.9); }
+
+  .ringbox { position: relative; width: 96px; height: 96px; border: none; background: none; padding: 0; cursor: pointer; flex: none; }
   .ringbox svg { width: 100%; height: 100%; transform: rotate(-90deg); }
   .ringbox .center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
   .ringbox .pct { font-size: 1.25rem; font-weight: 780; font-variant-numeric: tabular-nums; }
@@ -322,17 +370,9 @@
     <button id="installbtn" hidden style="font:inherit;font-weight:700;background:linear-gradient(135deg,var(--accent-deep),var(--accent));border:none;color:#fff;border-radius:12px;padding:6px 13px;cursor:pointer">⬇ התקנה</button>
   </header>
 
-  <div class="bento" data-v="home">
-    <button class="moon-tile" id="moon-tile" aria-label="הרעיון להערב">
-      <span class="moon" aria-hidden="true"></span>
-      <span class="eyebrow">הרעיון להערב</span>
-      <span>
-        <span class="ititle" id="tonight-title">טוען…</span>
-        <span class="cta">הקש לפרטים ולדירוג ↓</span>
-      </span>
-    </button>
-    <button class="card mini" id="tile-ring" aria-label="פרטי השלמת היום">
-      <div class="ringbox">
+  <section class="card" data-v="today" id="board">
+    <div class="b-top">
+      <button class="ringbox" id="tb-ring" aria-label="פרטי השלמת היום">
         <svg viewBox="0 0 96 96" aria-hidden="true">
           <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="var(--accent-deep)"/><stop offset="1" stop-color="var(--accent)"/>
@@ -341,17 +381,19 @@
           <circle id="ringfg" cx="48" cy="48" r="40" fill="none" stroke="url(#rg)" stroke-width="9" stroke-linecap="round" stroke-dasharray="251.33" stroke-dashoffset="251.33"/>
         </svg>
         <div class="center"><span class="pct" id="ringval">0%</span></div>
+      </button>
+      <div class="b-head">
+        <h2>היום שלי</h2>
+        <p class="sub" id="ringcap"></p>
       </div>
-      <div class="cap" id="ringcap">הרגלי היום</div>
-    </button>
-    <button class="card mini" id="tile-streak" aria-label="פרטי הרצף">
-      <div class="big flame" id="f-streak">0</div>
-      <div class="cap">ימים ברצף 🔥</div>
-      <div class="cap" id="f-ratings"></div>
-    </button>
-  </div>
+      <button class="streakchip" id="tb-streak" aria-label="הרצפים שלי">🔥 <b id="f-streak">0</b></button>
+    </div>
+    <div id="tb-habits"></div>
+    <div class="sigs" id="tb-favs"></div>
+    <div class="row" style="margin-top:8px"><button class="ghost" id="tb-edit">✏️ עריכת המועדפים</button></div>
+  </section>
 
-  <section class="card" data-v="home" id="sec-moment" style="border:1px solid var(--accent)">
+  <section class="card" data-v="today" id="sec-moment" style="border:1px solid var(--accent)">
     <h2 id="mo-title"></h2>
     <p class="sub" id="mo-text" style="margin-bottom:12px"></p>
     <div class="row">
@@ -360,45 +402,49 @@
     </div>
   </section>
 
-  <section class="card" data-v="home" id="sec-exp" hidden>
+  <section class="card" data-v="today" id="sec-exp" hidden>
     <h2>🧪 הניסוי שלי השבוע</h2>
     <div id="exp-body"></div>
   </section>
 
-  <section class="card" data-v="home" id="sec-why" style="border:1px solid var(--accent)">
+  <button class="moon-tile slim" data-v="today" id="moon-tile" aria-label="הרעיון להערב">
+    <span class="moon" aria-hidden="true"></span>
+    <span class="tinfo">
+      <span class="eyebrow">הרעיון להערב</span>
+      <span class="ititle" id="tonight-title">טוען…</span>
+    </span>
+    <span class="chev">◀</span>
+  </button>
+
+  <section class="card" data-v="journey" id="sec-why" style="border:1px solid var(--accent)">
     <h2>🎯 הלמה שלי</h2>
     <p class="sub">אני אחראי על ההרגלים שלי ועל השינוי שלי. בשביל מה?</p>
     <div id="whybox"></div>
   </section>
 
-  <button class="affirm-card" data-v="home" id="affirm" aria-label="אפירמציית הערב — הקשה למשפט הבא">
+  
+
+  <section class="card" data-v="today" id="sec-signals">
+    <h2>הבחירות היישומיות שלי</h2>
+    <p class="sub">הקשה אחת = בחירה אחת. הבחירות מצטברות — והזהות נבנית: אדם שנע ומשתמש בגופו בחופשיות. כל עמוד צובר ציון 0–100 (הקישו על הציון להסבר)</p>
+    <div id="pillars"></div>
+  </section>
+
+  <button class="affirm-card" data-v="today" id="affirm" aria-label="אפירמציית הערב — הקשה למשפט הבא">
     <span class="affirm-add" id="affirm-add">➕ משפט משלי</span>
     <span class="eyebrow">המציאות שאני יוצר</span>
     <div class="affirm-text" id="affirm-text"></div>
     <span class="affirm-sub">נשימה עמוקה · שרירים רפויים · הקש למשפט הבא</span>
   </button>
 
-  <section data-v="home" id="sec-summaries" style="display:grid;grid-template-columns:1fr 1fr;gap:13px"></section>
 
-  <section class="card" data-v="choices" id="sec-signals">
-    <h2>הבחירות היישומיות שלי</h2>
-    <p class="sub">הקשה אחת = בחירה אחת. הבחירות מצטברות — והזהות נבנית: אדם שנע ומשתמש בגופו בחופשיות. כל עמוד צובר ציון 0–100 (הקישו על הציון להסבר)</p>
-    <div id="pillars"></div>
-  </section>
-
-  <section class="card" data-v="community" id="sec-community">
-    <h2>🌍 הקהילה</h2>
-    <p class="sub">דירוגים משותפים חיים, מעגל הרגל עם חברים, ולוח המאסטרים</p>
-    <div id="comm"></div>
-  </section>
-
-  <section class="card" data-v="choices" id="sec-research">
+  <section class="card" data-v="journey" id="sec-research">
     <h2>🔬 המחקר שלי</h2>
     <p class="sub">המערכת בודקת לבד: אחרי אילו התנהגויות אתה קם רענן יותר?</p>
     <div id="findings"></div>
   </section>
 
-  <section class="card" data-v="studies" id="sec-daily" hidden>
+  <section class="card" data-v="library" id="sec-daily" hidden>
     <h2>🧪 מחקר היום</h2>
     <p class="sub" id="dr-date"></p>
     <div style="font-size:1.05rem;font-weight:750;margin:0 0 8px" id="dr-title"></div>
@@ -412,14 +458,14 @@
     <button class="ghost" id="dr-archive">מחקרים קודמים ←</button>
   </section>
 
-  <section class="card" data-v="studies" id="sec-studies">
+  <section class="card" data-v="library" id="sec-studies">
     <h2>🔬 כל המחקרים</h2>
     <p class="sub">דרגו כמה כל מחקר מדבר אליכם (1–5) — והפרופיל האישי שלכם ייבנה מזה</p>
     <div id="myprofile"></div>
     <div id="studies"></div>
   </section>
 
-  <section class="card" data-v="ideas" id="tonight-detail" hidden>
+  <section class="card" data-v="library" id="tonight-detail" hidden>
     <h2 id="td-title"></h2>
     <p class="how" id="td-how" style="font-size:0.9rem;margin:0 0 4px"></p>
     <p class="why" id="td-why" style="font-size:0.8rem;color:var(--ink-2);margin:0 0 4px"></p>
@@ -432,30 +478,31 @@
     </div>
   </section>
 
-  <section class="card" data-v="choices" id="sec-habits">
+  <section class="card" data-v="journey" id="sec-habits">
     <h2>ההרגלים שלי</h2>
     <p class="sub">רעיון שתרם — מאמצים כהרגל. עד שניים במקביל; נשבר רצף? ממשיכים מחר.</p>
     <div id="habits"></div>
     <div class="err" id="habiterr"></div>
   </section>
 
-  <section class="card" data-v="home" id="sec-journey">
+  <section class="card" data-v="journey" id="sec-journey">
     <h2>המסע שלי — מהלומד אל המנטור</h2>
     <p class="sub">השאיפה: להיות מנטור וללמד מה עובד לך. כל דירוג, סימון וניסוי — צעד במסלול</p>
     <div id="mentorpath" style="margin-bottom:14px"></div>
     <div class="level-row"><span class="level-name" id="lv-name"></span><span class="level-pts" id="lv-pts"></span></div>
     <div class="xpbar"><div id="xpfill" style="width:0%"></div></div>
     <div class="xpnext" id="lv-next"></div>
+    <div class="row" style="margin:2px 0 10px"><button class="pill" id="jr-ladder">🌱 סולם ההרגל</button></div>
     <div class="badges" id="badges"></div>
   </section>
 
-  <section class="card" data-v="ideas" id="sec-ideas">
+  <section class="card" data-v="library" id="sec-ideas">
     <h2>ספריית הרעיונות</h2>
     <p class="sub">מבוססי מחקר — המקור בכל רעיון. דרגו מה שניסיתם: 1–5 כמה זה תרם לשינה</p>
     <div id="ideas"></div>
   </section>
 
-  <section class="card" data-v="ideas" id="sec-media">
+  <section class="card" data-v="library" id="sec-media">
     <h2>🎵 המדיה שלי</h2>
     <p class="sub">שירים למדיטציה ולטקס הערב · תמונות מוטיבציה שיופיעו ברקע האפירמציה</p>
     <div class="row">
@@ -467,7 +514,7 @@
     <div id="media-list" style="margin-top:10px"></div>
   </section>
 
-  <section class="card" data-v="ideas">
+  <section class="card" data-v="library">
     <h2>הצעת רעיון</h2>
     <p class="sub">משהו שעבד לך? הוסף — ובסוף הפיילוט זה יגיע אלינו עם הייצוא</p>
     <div class="addidea">
@@ -477,7 +524,13 @@
     </div>
   </section>
 
-  <section class="card" data-v="community" id="sec-export">
+  <section class="card" data-v="journey" id="sec-community">
+    <h2>🌍 הקהילה</h2>
+    <p class="sub">דירוגים משותפים חיים, מעגל הרגל עם חברים, ולוח המאסטרים</p>
+    <div id="comm"></div>
+  </section>
+
+  <section class="card" data-v="journey" id="sec-export">
     <h2>🧪 משוב הפיילוט</h2>
     <p class="sub">בסוף תקופת הניסיון: הורידו את קובץ הנתונים ושלחו אותו חזרה למי שהזמין אתכם. הנתונים נשמרים רק במכשיר שלכם עד שתבחרו לשתף.</p>
     <div class="row">
@@ -504,15 +557,14 @@
   <button class="pill solid" id="r-next" style="font-size:1rem;padding:12px 34px"></button>
 </div>
 
+<div id="greet-splash" hidden><div class="gs-box"><span class="gs-icon" id="gs-icon"></span><div class="gs-title" id="gs-title"></div><div class="gs-sub" id="gs-sub"></div></div></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 
 <nav class="float" aria-label="ניווט" dir="rtl">
-  <button data-vw="home" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>בית</button>
-  <button data-vw="choices"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>בחירות</button>
-  <button data-vw="ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 1 4 10.5c-.8.7-1 1.5-1 2.5h-6c0-1-.2-1.8-1-2.5A6 6 0 0 1 12 3z"/></svg>רעיונות</button>
-  <button data-vw="studies"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5L4 19a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3L14 8V3"/></svg>מחקרים</button>
-  <button data-vw="community"><svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5M11 20c0-3 2.5-5 5-5s5 2 5 5"/></svg>קהילה</button>
+  <button data-vw="today" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.2 12.4l2.6 2.6 5-5.4"/></svg>היום</button>
+  <button data-vw="journey"><svg viewBox="0 0 24 24"><path d="M6 21V4"/><path d="M6 4h12l-2.5 4L18 12H6"/></svg>מסע</button>
+  <button data-vw="library"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 1 4 10.5c-.8.7-1 1.5-1 2.5h-6c0-1-.2-1.8-1-2.5A6 6 0 0 1 12 3z"/></svg>ספרייה</button>
 </nav>
 
 <script>
@@ -640,6 +692,55 @@ function confetti(big = false) {
     requestAnimationFrame(tick);
   })(t0);
 }
+/* חגיגת סימון שקטה: טבעת זוהר חמה + כוכבים רכים, בלי צבעי ניאון */
+function glowBurst(x, y) {
+  if (reduceMotion()) return;
+  const cv = $('#confetti'), ctx = cv.getContext('2d');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const parts = Array.from({ length: 14 }, (_, i) => ({ a: i / 14 * 6.283 + Math.random() * 0.4, v: 1.1 + Math.random() * 2, r: 1 + Math.random() * 2.1, c: ['#f2ead9', '#e9cb9e', '#cfd6f2'][i % 3] }));
+  const t0 = performance.now();
+  (function tick(now) {
+    const dt = (now - t0) / 700;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    if (dt >= 1) return;
+    ctx.beginPath(); ctx.arc(x, y, 8 + dt * 46, 0, 7);
+    ctx.strokeStyle = `rgba(233,203,158,${(0.35 * (1 - dt)).toFixed(3)})`;
+    ctx.lineWidth = 2; ctx.stroke();
+    for (const q of parts) {
+      const d = q.v * dt * 34;
+      ctx.beginPath(); ctx.arc(x + Math.cos(q.a) * d, y + Math.sin(q.a) * d - dt * dt * 26, q.r * (1 - dt * 0.5), 0, 7);
+      ctx.globalAlpha = 1 - dt; ctx.fillStyle = q.c; ctx.fill(); ctx.globalAlpha = 1;
+    }
+    requestAnimationFrame(tick);
+  })(t0);
+}
+function celebrate(e, msg) {
+  const el = e && e.currentTarget;
+  const r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+  glowBurst(r ? r.left + r.width / 2 : innerWidth / 2, r ? r.top + r.height / 2 : innerHeight * 0.35);
+  if (msg) toast(msg);
+  vibrate(25);
+  if (el) { el.classList.add('justdone'); setTimeout(() => el.classList.remove('justdone'), 700); }
+}
+// ברכת פתיחה — פעם אחת ביום, עם מבט קטן על אתמול
+function daySplash() {
+  try {
+    if (localStorage.getItem('greetedDay') === todayISO()) return;
+    localStorage.setItem('greetedDay', todayISO());
+    const y = new Date(Date.now() - 86400000).toLocaleDateString('sv-SE');
+    const n = DATA.signals.filter(x => x.date === y).length + DATA.habits.filter(h => h.history[y]).length;
+    const av = avatarOf(DATA.settings.avatar);
+    $('#gs-icon').innerHTML = av ? avatarHTML(DATA.settings.avatar) : `<img class="avimg" src="./avatars/calm.png" alt="">`;
+    $('#gs-title').textContent = $('#greet').textContent + (av ? ' · ' + av.n : '');
+    $('#gs-sub').textContent = n ? `אתמול: ${n} הצבעות לזהות — ממשיכים היום` : 'יום חדש — הצבעה קטנה אחת מספיקה';
+    const el = $('#greet-splash');
+    el.hidden = false;
+    const bye = () => { el.classList.add('bye'); setTimeout(() => { el.hidden = true; el.classList.remove('bye'); }, 500); };
+    setTimeout(bye, 2100);
+    el.onclick = bye;
+  } catch { /* הברכה לעולם לא מפילה את האפליקציה */ }
+}
+
 function longestRun(history) {
   const days = Object.keys(history).sort();
   let best = 0, run = 0, prev = null;
@@ -864,20 +965,98 @@ async function checkAchievements() {
 }
 
 /* ---- רנדור ---- */
-function renderHero() {
+/* לוח "היום שלי": ההרגלים הפעילים + עד 6 בחירות מועדפות — לולאת סימון של 5 שניות */
+function favSignals() {
+  const saved = DATA.settings.favSignals;
+  if (Array.isArray(saved) && saved.length) return saved.map(k => SIGNALS.find(s => s.key === k)).filter(Boolean).slice(0, 6);
+  const counts = {};
+  for (const s of DATA.signals) counts[s.key] = (counts[s.key] || 0) + 1;
+  const out = SIGNALS.filter(s => counts[s.key]).sort((a, b) => counts[b.key] - counts[a.key]);
+  for (const k of ['noscreen', 'daylight', 'steps', 'ritual', 'earlycoffee', 'calm']) {
+    const d = SIGNALS.find(s => s.key === k);
+    if (out.length < 6 && !out.includes(d)) out.push(d);
+  }
+  return out.slice(0, 6);
+}
+const weekDots = has => `<span class="dots wk">${lastNDates(7).map(d => `<span class="${has(d) ? 'on' : ''}"></span>`).join('')}</span>`;
+function renderToday() {
   const active = DATA.habits.filter(h => h.active);
-  const CIRC = 2 * Math.PI * 40;
-  const activeP = PILLARS.filter(pl => pillarActiveDates(pl.p).has(todayISO())).length;
-  const pct = activeP / PILLARS.length;
-  const cap = `עמודים פעילים היום · ${activeP}/${PILLARS.length}`;
+  const favs = favSignals();
+  const hb = $('#tb-habits');
+  hb.innerHTML = '';
+  if (!active.length) {
+    hb.innerHTML = '<p class="sub" style="margin:4px 0 10px">עוד אין הרגלים קבועים — רעיון שתרם לך בספרייה הופך להרגל בהקשה אחת.</p>';
+  }
+  for (const h of active) {
+    const done = !!h.history[todayISO()];
+    const st = streak(h);
+    const row = document.createElement('button');
+    row.className = 'trow' + (done ? ' on' : '');
+    row.innerHTML = `<span class="se">${h.icon || '🎯'}</span>
+      <span class="tinfo"><b>${''}</b>${weekDots(d => h.history[d])}</span>
+      <span class="tmark">${st >= 2 ? `<i>${st >= 21 ? '👑' : st >= 7 ? '🏆' : '🔥'}${st}</i>` : ''}${done ? '<em>✓</em>' : '<em class="todo">סמן</em>'}</span>`;
+    row.querySelector('b').textContent = h.name;
+    row.onclick = async e => {
+      await api('/api/habits/toggle', { id: h.id, date: todayISO() });
+      if (!done) celebrate(e, `🔥 עוד הצבעה לזהות — ${st + 1} ברצף · +15`);
+      refresh();
+    };
+    hb.appendChild(row);
+  }
+  const fv = $('#tb-favs');
+  fv.innerHTML = '';
+  for (const sg of favs) {
+    const on = sigDates(sg.key).has(todayISO());
+    const st = sigStreak(sg.key);
+    const b = document.createElement('button');
+    b.className = 'sig tall' + (on ? ' on' : '');
+    b.setAttribute('aria-pressed', on);
+    b.innerHTML = `<span class="se">${sg.e}</span><span class="sl">${sg.l}<br>${weekDots(d => sigDates(sg.key).has(d))}</span>${st >= 2 ? `<span class="sk">🔥${st}</span>` : ''}`;
+    if (activeExp()?.signalKey === sg.key) b.classList.add('exp-star');
+    b.onclick = async e => {
+      const r = await api('/api/signals/toggle', { key: sg.key, date: todayISO() });
+      if (r.on) celebrate(e, sigStreak(sg.key) + 1 >= 3 ? `🔥 ${sigStreak(sg.key) + 1} ימים ברצף — ${sg.l}` : `${sg.e} בחירה נרשמה · +5`);
+      refresh();
+    };
+    fv.appendChild(b);
+  }
+  const total = active.length + favs.length;
+  const doneN = active.filter(h => h.history[todayISO()]).length + favs.filter(x => sigDates(x.key).has(todayISO())).length;
+  const pct = total ? doneN / total : 0;
   $('#ringval').textContent = Math.round(pct * 100) + '%';
-  $('#ringcap').textContent = cap;
+  $('#ringcap').textContent = `${doneN}/${total} סומנו היום`;
+  const CIRC = 2 * Math.PI * 40;
   const fg = $('#ringfg');
   fg.style.transition = reduceMotion() ? 'none' : 'stroke-dashoffset 0.7s ease';
   requestAnimationFrame(() => fg.setAttribute('stroke-dashoffset', CIRC * (1 - Math.max(0.006, pct))));
   $('#f-streak').textContent = Math.max(0, ...active.map(streak), bestSigRun());
-  $('#f-ratings').textContent = `${DATA.feedback.length} דירוגים`;
 }
+$('#tb-streak').onclick = () => streakScreen();
+$('#tb-ring').onclick = () => {
+  const active = DATA.habits.filter(h => h.active);
+  const favs = favSignals();
+  openSheet(`<div class="sh-head"><span class="sh-emoji">⭕</span><div><div class="sh-title">השלמת היום</div>
+    <div class="sh-status">הטבעת נסגרת כשכל לוח היום מסומן — ומתאפסת כל בוקר</div></div></div>
+    ${active.map(h => `<div class="sh-row">${h.history[todayISO()] ? '✅' : '⬜'} ${h.icon || '🎯'} ${h.name}</div>`).join('')}
+    ${favs.map(x => `<div class="sh-row">${sigDates(x.key).has(todayISO()) ? '✅' : '⬜'} ${x.e} ${x.l}</div>`).join('')}`);
+};
+$('#tb-edit').onclick = () => {
+  const cur = favSignals().map(x => x.key);
+  openSheet(`<div class="sh-head"><span class="sh-emoji">✏️</span><div><div class="sh-title">המועדפים שלי</div>
+    <div class="sh-status">עד 6 בחירות שיופיעו בלוח היום — השאר תמיד זמינות ב"כל הבחירות"</div></div></div>
+    <div class="sigs" id="fav-grid">${SIGNALS.map(x => `<button class="sig ${cur.includes(x.key) ? 'on' : ''}" data-k="${x.key}"><span class="se">${x.e}</span><span class="sl">${x.l}</span></button>`).join('')}</div>
+    <div class="row" style="margin-top:12px"><button class="pill solid" id="fav-save">שמירה</button></div>`);
+  const sel = new Set(cur);
+  for (const b of document.querySelectorAll('#fav-grid .sig')) {
+    b.onclick = () => {
+      const k = b.dataset.k;
+      if (sel.has(k)) { sel.delete(k); b.classList.remove('on'); }
+      else if (sel.size >= 6) toast('עד 6 מועדפים — הסר אחד קודם');
+      else { sel.add(k); b.classList.add('on'); }
+    };
+  }
+  $('#fav-save').onclick = async () => { await api('/api/settings', { favSignals: [...sel] }); closeSheet(); toast('✏️ לוח היום עודכן'); refresh(); };
+};
 let TONIGHT = null;
 function pickTonight() {
   const untried = visibleIdeas().filter(i => !stats(i.id).n);
@@ -893,7 +1072,7 @@ function wireRating(root, idea, onDone) {
       if (COMM && COMM.token) commApi('/api/rate', { ideaId: idea.id, score: +b.dataset.v }).catch(() => {});
       root.querySelector('.rate').classList.remove('open');
       root.querySelector('.thanks').textContent = '✓ נרשם';
-      toast('⭐ +10 נק׳ — הדירוג נספר'); confetti(); vibrate(30);
+      celebrate({ currentTarget: b }, '⭐ +10 נק׳ — הדירוג נספר');
       setTimeout(onDone, 900);
     };
   }
@@ -925,7 +1104,7 @@ function renderTonight() {
   d.querySelector('.thanks').textContent = '';
   wireRating(d, TONIGHT, refresh);
 }
-$('#moon-tile').onclick = () => { if (!TONIGHT) return; showView('ideas'); $('#tonight-detail').hidden = false; };
+$('#moon-tile').onclick = () => { showView('library'); if (TONIGHT) $('#tonight-detail').hidden = false; };
 
 const GLYPHS = ['🌙','☀️','📵','🛁','☕','🧊','⏰','📖','🫧','🧘'];
 function renderHabits() {
@@ -954,9 +1133,9 @@ function renderHabits() {
     check.textContent = done ? '✓ בוצע' : 'סימון';
     check.classList.toggle('done', done);
     if (!done) check.classList.add('solid');
-    check.onclick = async () => {
+    check.onclick = async e => {
       await api('/api/habits/toggle', { id: h.id, date: todayISO() });
-      if (!done) { const s = streak(h) + 1; toast(s >= 3 ? `🔥 +15 נק׳ — ${s} ימים ברצף!` : '🔥 +15 נק׳ — עוד הצבעה לזהות'); confetti(); vibrate(25); }
+      if (!done) { const s = streak(h) + 1; celebrate(e, s >= 3 ? `🔥 +15 נק׳ — ${s} ימים ברצף!` : '🔥 +15 נק׳ — עוד הצבעה לזהות'); }
       refresh();
     };
     row.querySelector('.archive').onclick = async () => {
@@ -1164,7 +1343,7 @@ function renderPillars() {
     const todayCount = sigs.filter(s => sigDates(s.key).has(todayISO())).length;
     const det = document.createElement('details');
     det.className = 'pgroup';
-    det.open = todayCount === 0 && pl.p === 'sleep';
+    det.open = false;
     det.innerHTML = `
       <summary>
         ${aimg(PILLAR_AV[pl.p])}
@@ -1183,7 +1362,7 @@ function renderPillars() {
       b.setAttribute('aria-pressed', on);
       b.innerHTML = `<span class="se">${s.e}</span><span class="sl">${s.l}</span>${st >= 2 ? `<span class="sk">🔥×${st}</span>` : ''}`;
       if (activeExp()?.signalKey === s.key) b.classList.add('exp-star');
-      b.onclick = async () => {
+      b.onclick = async e => {
         const r = await api('/api/signals/toggle', { key: s.key, date: todayISO() });
         if (r.on) {
           const ns = sigStreak(s.key) + 1;
@@ -1193,7 +1372,7 @@ function renderPillars() {
             : rot === 0 ? `💡 ${s.w}`
             : (w && rot === 2) ? `🎯 בחירה יישומית בשביל: ${w}`
             : `${s.e} בחירה יישומית נרשמה · +5 נק׳`;
-          toast(msg); confetti(); vibrate(25);
+          celebrate(e, msg);
         }
         refresh();
       };
@@ -1484,12 +1663,12 @@ function renderStudies() {
         <button class="pill" id="prof-sig">הבחירות היישומיות שלך הערב</button>
       </div></div>`;
     profBox.querySelector('#prof-idea').onclick = () => {
-      showView('ideas');
+      showView('library');
       const d = document.querySelector(`details.idea[data-idea="${top[0].t.ideaId}"]`);
       if (d) { d.open = true; setTimeout(() => d.scrollIntoView({ block: 'center' }), 60); }
     };
     profBox.querySelector('#prof-sig').onclick = () => {
-      showView('choices');
+      showView('today');
       toast(`${top[0].t.e} הבחירות שלך: ${SIGNALS.filter(s => top[0].t.signals.includes(s.key)).map(s => s.e).join(' ')}`);
     };
   } else {
@@ -1731,9 +1910,9 @@ function renderMoment() {
   const a = $('#mo-action');
   a.textContent = on ? `✓ ${s.l}` : `${s.e} ${s.l} — סמן`;
   a.classList.toggle('done', on);
-  a.onclick = async () => {
+  a.onclick = async e => {
     const r = await api('/api/signals/toggle', { key: m.sig, date: todayISO() });
-    if (r.on) { toast(`💡 ${s.w}`); confetti(); vibrate(25); }
+    if (r.on) celebrate(e, `💡 ${s.w}`);
     refresh();
   };
   const rb = $('#mo-ritual');
@@ -1749,7 +1928,7 @@ async function startExperiment(r) {
   await api('/api/settings', { experiment: { studyDate: r.date, title: r.title, insight: r.insight, signalKey: t.signals[0], startedAt: todayISO() } });
   toast('🧪 הניסוי יצא לדרך — שבוע אחד, הנתונים ישפטו');
   confetti(true); vibrate([40, 60, 40]);
-  showView('home'); refresh();
+  showView('today'); refresh();
 }
 async function finishExperiment(verdictOnly) {
   const ex = activeExp();
@@ -1861,8 +2040,8 @@ $('#r-skip').onclick = () => { clearTimeout(breathTimer); stopRitualAudio(); $('
 
 /* כל כרטיס מתרנדר בתא מבודד — תקלה באחד לא מפילה את השאר ולא את המסך */
 function renderAll() {
-  const steps = [renderHero, renderTonight, renderHabits, renderJourney, renderIdeas, renderAffirm,
-    renderPillars, renderResearch, renderDailyResearch, renderCommunity, renderWhy, renderSummaries,
+  const steps = [renderToday, renderTonight, renderHabits, renderJourney, renderIdeas, renderAffirm,
+    renderPillars, renderResearch, renderDailyResearch, renderCommunity, renderWhy,
     renderMoment, renderExp, renderMedia, applyBigText, renderMentorPath,
     () => { $('#avatar').innerHTML = avatarHTML(DATA.settings.avatar); }];
   for (const fn of steps) {
@@ -1885,13 +2064,6 @@ $('#addbtn').onclick = async () => {
   toast('💡 הרעיון נוסף לספרייה'); refresh();
 };
 function onTap(el, fn) { el.onclick = fn; }
-onTap($('#tile-ring'), () => {
-  const active = DATA.habits.filter(h => h.active);
-  openSheet(`<div class="sh-head"><span class="sh-emoji">⭕</span><div><div class="sh-title">השלמת היום</div>
-    <div class="sh-status">${active.length ? `${active.filter(h => h.history[todayISO()]).length}/${active.length} סומנו היום` : 'אין הרגלים פעילים'}</div></div></div>
-    <p class="sh-deep">הטבעת נסגרת כשכל ההרגלים סומנו. היא מתאפסת כל בוקר — כל יום הוא הצבעה חדשה.</p>
-    ${active.map(h => `<div class="sh-row">${h.history[todayISO()] ? '✅' : '⬜'} ${h.name}</div>`).join('')}`);
-});
 /* מסך הרצפים המלא — נפתח גם מהאריח הקטן וגם מאריח הסיכום */
 function streakScreen() {
   const active = DATA.habits.filter(h => h.active);
@@ -1907,9 +2079,8 @@ function streakScreen() {
     <div class="sh-sec">אבני הדרך</div>
     ${['streak-3', 'streak-7'].map(id => { const a = ACH.find(x => x.id === id); return `<div class="sh-row">${a.won() ? '✅' : '⬜'} ${a.e} ${a.n}</div>`; }).join('')}`);
 }
-onTap($('#tile-streak'), streakScreen);
 /* ---- מנוע מסכים: בית = שיאים; כל נושא נפתח למסך העמקה ---- */
-let VIEW = 'home';
+let VIEW = 'today';
 function showView(v) {
   VIEW = v;
   for (const el of document.querySelectorAll('[data-v]')) {
@@ -1958,50 +2129,9 @@ function ladderScreen() {
     <p class="sh-deep" style="margin-top:12px">העיקרון: מתחילים כל כך קטן שאי אפשר להיכשל, וכשזה נהיה קל — מטפסים מדרגה. המאסטר הוא לא מי שהתאמץ הכי הרבה, אלא מי שנשאר הכי הרבה זמן.</p>
     ${!top || run < 1 ? '<div class="row" style="margin-top:8px"><button class="pill solid" id="lad-start">🌱 בחר הרגל קל מאוד</button></div>' : ''}`);
   const b = $('#lad-start');
-  if (b) b.onclick = () => { closeSheet(); showView('ideas'); };
+  if (b) b.onclick = () => { closeSheet(); showView('library'); };
 }
 
-const scoreWord = s => s >= 85 ? ['מאסטר!', '#ffd97a'] : s >= 70 ? ['מעולה', '#7dffc4'] : s >= 40 ? ['טוב מאוד', '#a9c7ff'] : ['מתחילים יפה', ''];
-
-function renderSummaries() {
-  const box = $('#sec-summaries');
-  const todayP = PILLARS.filter(pl => pillarActiveDates(pl.p).has(todayISO())).length;
-  const best = PILLARS.map(pl => ({ pl, s: pillarScore(pl.p).score })).sort((a, b) => b.s - a.s)[0];
-  const [word, wc] = scoreWord(best.s);
-  const streakN = Math.max(0, ...DATA.habits.filter(h => h.active).map(streak), bestSigRun());
-  const top = topHabitForLadder();
-  const lv = habitLevel(top ? top.run : 0);
-  const arc = (v, max) => { const C = 2 * Math.PI * 26; return `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="7"/><circle cx="32" cy="32" r="26" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.min(1, v / max))}"/></svg>`; };
-  const latest = Array.isArray(RESEARCH) && RESEARCH.length ? RESEARCH[0].title : 'טוען…';
-  box.innerHTML = `
-    <button class="btile" id="bt-choices"><span class="bt-e">${aimg('awareness')}</span>
-      <span class="bt-l">בחירות היום</span><span class="bt-v">${todayP}/${PILLARS.length}</span>
-      <span class="bt-s">עמודים פעילים</span><div class="bt-bar"><div style="width:${Math.round(todayP / PILLARS.length * 100)}%"></div></div>
-      ${todayP >= 3 ? '<span class="bt-word">יום חזק! 💫</span>' : ''}</button>
-    <button class="btile t-indigo" id="bt-score"><span class="bt-e">${aimg(PILLAR_AV[best.pl.p])}</span>
-      <span class="bt-l">ציון ${best.pl.n}</span>
-      <div class="gaugebox">${arc(best.s, 100)}<div><span class="bt-v">${best.s}</span><br><span class="bt-word" style="color:${wc || '#fff'}">${word}</span></div></div></button>
-    <button class="btile t-coral" id="bt-streak"><span class="bt-e">${aimg('innerpower')}</span>
-      <span class="bt-l">רצף</span><span class="bt-v">${streakN}</span>
-      <span class="bt-s">${streakN >= 3 ? 'ממשיכים — זו כבר זהות' : 'כל יום הוא הצבעה'}</span></button>
-    <button class="btile t-gold" id="bt-ladder"><span class="bt-e">${aimg('growth')}</span>
-      <span class="bt-l">סולם ההרגל</span><span class="bt-v" style="font-size:1.25rem">${lv.name}</span>
-      <span class="bt-s">${lv.next ? `עוד ${Math.max(0, lv.next.min - (top ? top.run : 0))} ימים ל${lv.next.name}` : 'הרף של ללמד אחרים'}</span>
-      ${lv.next ? `<div class="bt-bar"><div style="width:${Math.round(((top ? top.run : 0) - lv.min) / (lv.next.min - lv.min) * 100)}%"></div></div>` : ''}</button>
-    <button class="btile t-pink" id="bt-studies"><span class="bt-e">${aimg('clearself')}</span>
-      <span class="bt-l">מחקר היום</span>
-      <span class="bt-s" style="font-size:0.86rem;font-weight:650;color:#fff">${latest.length > 48 ? latest.slice(0, 47) + '…' : latest}</span>
-      <span class="bt-s">${Array.isArray(RESEARCH) ? RESEARCH.length + ' מחקרים בספרייה' : ''}</span></button>
-    <button class="btile t-green" id="bt-comm"><span class="bt-e">${aimg('compassion')}</span>
-      <span class="bt-l">קהילה</span><span class="bt-v" style="font-size:1.25rem">${COMM?.token ? COMM.name : 'הצטרפו'}</span>
-      <span class="bt-s">${COMM?.token ? 'מחובר · השיעורים מחכים' : 'מעגלים, שיעורים ומנטורים'}</span></button>`;
-  onTap($('#bt-choices'), () => showView('choices'));
-  onTap($('#bt-score'), () => scoreSheet(best.pl));
-  onTap($('#bt-streak'), streakScreen);
-  onTap($('#bt-ladder'), ladderScreen);
-  onTap($('#bt-studies'), () => showView('studies'));
-  onTap($('#bt-comm'), () => showView('community'));
-}
 const hh = new Date().getHours();
 $('#greet').textContent = hh < 5 ? 'לילה טוב' : hh < 12 ? 'בוקר טוב' : hh < 18 ? 'צהריים טובים' : 'ערב טוב';
 $('#hdate').textContent = new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -2240,6 +2370,8 @@ let LAST_ISDAY = false;
 document.addEventListener('visibilitychange', () => { if (!document.hidden) drawSky(); });
 addEventListener('resize', drawSky);
 
+$('#jr-ladder').onclick = () => ladderScreen();
+
 /* ---- PWA: התקנה + עבודה אופליין ---- */
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -2260,5 +2392,5 @@ $('#installbtn').onclick = async () => {
 };
 addEventListener('appinstalled', () => { $('#installbtn').hidden = true; toast('🌙 האפליקציה על מסך הבית — נתראה שם'); });
 
-refresh();
+refresh().then(daySplash);
 </script>
