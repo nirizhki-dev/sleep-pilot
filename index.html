@@ -284,6 +284,7 @@
   .pico.sm { width: 24px; height: 24px; border-radius: 7px; }
   .bt-e img { width: 36px; height: 36px; border-radius: 11px; object-fit: cover; display: block; box-shadow: 0 2px 10px rgba(0,0,0,0.35); }
   .shimg { width: 54px; height: 54px; border-radius: 16px; object-fit: cover; display: block; }
+  .why-aff { font-size: 0.98rem; line-height: 1.55; color: var(--ink); background: var(--accent-soft); border-radius: 16px; padding: 12px 15px; margin: 4px 0 12px; }
   .se-img { width: 34px; height: 34px; border-radius: 11px; object-fit: cover; flex: none; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
   .gl-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
   .bdg img.e { object-fit: cover; padding: 0; }
@@ -1227,12 +1228,12 @@ function renderIdeas() {
 
 /* ---- הלמה שלי: הבסיס של האחריות האישית ---- */
 const WHYS = [
-  { e: '🕊️', t: 'חופש תנועה בגוף בריא' },
-  { e: '💞', t: 'מערכות יחסים עמוקות ונוכחות אמיתית' },
-  { e: '😊', t: 'אושר יומיומי וראיית הטוב' },
-  { e: '👨‍👧', t: 'הורות ראויה — דוגמה אישית לילדים' },
-  { e: '⚡', t: 'אנרגיה ליצירה ולעשייה' },
-  { e: '🧭', t: 'להיות נאמן לעצמי ולמילה שלי' },
+  { e: '🕊️', t: 'חופש תנועה בגוף בריא', d: 'לנוע, לחקור ולרקוד בעולם', a: 'בכל נשימה אני מתחזק, נהיה קליל ומתמלא אנרגיה לרקוד עם אהוביי.' },
+  { e: '💞', t: 'מערכות יחסים עמוקות ונוכחות אמיתית', d: 'להיות שם באמת — קשוב ופנוי לאנשים שאני אוהב', a: 'אני נוכח, סבלני ומלא קשב עם האנשים שאני אוהב.' },
+  { e: '😊', t: 'אושר יומיומי וראיית הטוב', d: 'לקום אל בוקר צלול ולשמוח במה שיש', a: 'אני קם צלול אל הבוקר, ורואה את הטוב שממלא את היום שלי.' },
+  { e: '👨‍👧', t: 'הורות ראויה — דוגמה אישית לילדים', d: 'להיות ההורה הרגוע והיציב שהילדים גדלים לצידו', a: 'אני ההורה הרגוע והנוכח שהילדים שלי לומדים ממנו מהי שלווה.' },
+  { e: '⚡', t: 'אנרגיה ליצירה ולעשייה', d: 'כוח מלא לרעיונות, לעבודה ולחלומות שלי', a: 'אני מתעורר מלא כוח, והאנרגיה שלי זורמת אל מה שחשוב לי.' },
+  { e: '🧭', t: 'להיות נאמן לעצמי ולמילה שלי', d: 'לעמוד במה שהבטחתי לעצמי, ערב אחרי ערב', a: 'אני עומד במילה שלי לעצמי — וכל ערב מוכיח לי את זה מחדש.' },
 ];
 const myWhy = () => (DATA.settings.why || '').trim();
 
@@ -1243,32 +1244,46 @@ function renderWhy() {
     box.innerHTML = `<div class="sigs">${WHYS.map((x, i) => `<button class="sig" data-i="${i}">${aimg(WHY_AV[i], 'se-img')}<span class="sl">${x.t}</span></button>`).join('')}</div>
       <div class="addidea" style="margin-top:10px">
         <input id="why-free" placeholder="או במילים שלך: אני עושה את זה בשביל…" maxlength="120">
-        <button class="pill solid" id="why-save" style="justify-self:start">זו הלמה שלי</button>
+        <button class="pill solid" id="why-save" style="justify-self:start">המשך לבניית הלמה ←</button>
       </div>`;
-    for (const b of box.querySelectorAll('.sig')) b.onclick = () => setWhy(WHYS[+b.dataset.i].e + ' ' + WHYS[+b.dataset.i].t);
-    box.querySelector('#why-save').onclick = () => { const v = $('#why-free').value.trim(); if (v) setWhy(v); };
+    for (const b of box.querySelectorAll('.sig')) b.onclick = () => whyBuilder(+b.dataset.i);
+    box.querySelector('#why-save').onclick = () => { const v = $('#why-free').value.trim(); if (v) whyBuilder(null, v); };
     return;
   }
+  const desc = (DATA.settings.whyDesc || '').trim();
+  const aff = (DATA.settings.whyAffirmation || '').trim();
   box.innerHTML = `
-    <div class="affirm-text" style="font-size:1.2rem;margin:6px 0 12px">${w}</div>
+    <div class="affirm-text" style="font-size:1.2rem;margin:6px 0 2px"></div>
+    ${desc ? '<p class="sub why-desc" style="margin:0 0 10px"></p>' : ''}
+    ${aff ? '<div class="why-aff"></div>' : ''}
     <div class="row">
       <button class="pill solid" id="why-remind">⏰ תזכורת יומית עם הלמה</button>
       <button class="pill" id="why-wall">🖼 טפט למסך הנעילה</button>
       <button class="ghost" id="why-edit">עריכה</button>
+      <button class="ghost" id="why-reset">החלפה</button>
       <span class="thanks" id="why-msg"></span>
     </div>`;
+  box.querySelector('.affirm-text').textContent = w;
+  if (desc) box.querySelector('.why-desc').textContent = desc;
+  if (aff) box.querySelector('.why-aff').textContent = '„' + aff + '”';
   box.querySelector('#why-wall').onclick = genWallpaper;
-  box.querySelector('#why-edit').onclick = async () => { await api('/api/settings', { why: '' }); refresh(); };
+  box.querySelector('#why-edit').onclick = () => whyBuilder('edit');
+  box.querySelector('#why-reset').onclick = async () => {
+    if (await confirmSheet('להחליף את הלמה?', 'הלמה, התיאור והמשפט יימחקו ותבחר מחדש', 'החלפה', aimg('reflection', 'shimg'))) {
+      await api('/api/settings', { why: '', whyDesc: '', whyAffirmation: '' }); refresh();
+    }
+  };
   box.querySelector('#why-remind').onclick = async () => {
     const time = await askSheet('תזכורת הלמה', 'באיזו שעה להזכיר, כל יום?', '21:00', DATA.settings.whyReminderTime || '21:00');
     if (!time || !/^\d{1,2}:\d{2}$/.test(time.trim())) return;
     api('/api/settings', { whyReminderTime: time.trim() });
     const d = new Date(); d.setDate(d.getDate() + 1);
     const day = d.toLocaleDateString('sv-SE').replace(/-/g, '');
+    const remindLine = (DATA.settings.whyAffirmation || 'אני אחראי על ההרגלים שלי ועל השינוי שלי.').replace(/[,;\\]/g, ' ');
     const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//habits-why//he', 'BEGIN:VEVENT',
       `UID:why-${day}@habits.local`, `DTSTART:${day}T${time.trim().replace(':', '').padStart(4, '0')}00`, 'RRULE:FREQ=DAILY',
       `SUMMARY:🎯 ${w.replace(/[,;\\]/g, ' ')}`,
-      'DESCRIPTION:אני אחראי על ההרגלים שלי ועל השינוי שלי. בחירה יישומית אחת עכשיו — בשביל הלמה.',
+      `DESCRIPTION:${remindLine}`,
       'BEGIN:VALARM', 'ACTION:DISPLAY', 'TRIGGER:-PT0M', `DESCRIPTION:🎯 ${w.replace(/[,;\\]/g, ' ')}`, 'END:VALARM',
       'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
     const a = document.createElement('a');
@@ -1278,18 +1293,51 @@ function renderWhy() {
     setTimeout(() => { const m = $('#why-msg'); if (m) m.textContent = ''; }, 5000);
   };
 }
-async function setWhy(text) {
-  await api('/api/settings', { why: text, whySetAt: todayISO() });
-  toast('🎯 הלמה נקבעה — מעכשיו כל סימון הוא הצבעה בשבילה');
-  confetti(true); vibrate([40, 60, 40]);
-  refresh();
+
+/* בונה הלמה: למה → מה זה אומר בשבילי → המשפט שיוצר את זה (בלשון הווה) */
+function whyBuilder(sel, freeTitle) {
+  const base = typeof sel === 'number' ? WHYS[sel] : null;
+  const editing = sel === 'edit';
+  openSheet(`
+    <div class="sh-head"><span class="sh-emoji">${aimg(base ? WHY_AV[sel] : 'awareness', 'shimg')}</span>
+      <div><div class="sh-title">בניית הלמה שלי</div>
+      <div class="sh-status">למה → מה זה אומר בשבילי → המשפט שיוצר את זה</div></div></div>
+    <div class="addidea" style="margin-top:6px">
+      <div class="sh-sec" style="margin:4px 0 0">הלמה</div>
+      <input id="wb-title" maxlength="80" placeholder="בשביל מה אני עושה את זה?">
+      <div class="sh-sec" style="margin:8px 0 0">מה זה אומר בשבילי</div>
+      <input id="wb-desc" maxlength="140" placeholder="למשל: לנוע, לחקור ולרקוד בעולם">
+      <div class="sh-sec" style="margin:8px 0 0">המשפט שיוצר את זה — בלשון הווה, כאילו זה כבר קורה</div>
+      <input id="wb-aff" maxlength="160" placeholder="אני…">
+      <p class="sub" style="margin:8px 0 0">המשפט מצטרף למחזור האפירמציות ולטפט — המוח פוגש אותו שוב ושוב, והוא נעשה מציאות.</p>
+      <div class="row" style="margin-top:12px">
+        <button class="pill solid" id="wb-save">✓ זו הלמה שלי</button>
+        <button class="ghost" id="wb-cancel">ביטול</button>
+      </div>
+    </div>`);
+  $('#wb-title').value = base ? base.e + ' ' + base.t : (editing ? myWhy() : (freeTitle || ''));
+  $('#wb-desc').value = base ? base.d : (editing ? DATA.settings.whyDesc || '' : '');
+  $('#wb-aff').value = base ? base.a : (editing ? DATA.settings.whyAffirmation || '' : '');
+  $('#wb-cancel').onclick = closeSheet;
+  $('#wb-save').onclick = async () => {
+    const why = $('#wb-title').value.trim();
+    if (!why) { toast('חסרה הלמה עצמה'); return; }
+    await api('/api/settings', { why, whyDesc: $('#wb-desc').value.trim(), whyAffirmation: $('#wb-aff').value.trim(), whySetAt: todayISO() });
+    closeSheet();
+    toast('🎯 הלמה נקבעה — מעכשיו כל סימון הוא הצבעה בשבילה');
+    confetti(true); vibrate([40, 60, 40]);
+    refresh();
+  };
 }
+
 
 /* ---- אפירמציות ---- */
 const AFFIRMATIONS = ['אני ישן באופן טבעי ובקלות.', 'הגוף שלי מתמלא בשנתי בכל מה שהוא צריך.', 'השינה שלי עמוקה ורציפה.', 'אני נושם עמוק. השרירים שלי רפויים.', 'הלילה הוא זמן ההתחדשות שלי.', 'אני משחרר את היום — הוא עשה את שלו.', 'המיטה שלי היא מקום של מנוחה.', 'אני בוחר להירגע. הגוף כבר יודע את הדרך.', 'כל נשיפה מרפה אותי עוד קצת.', 'אני אדם שישן טוב.'];
 let affirmOffset = 0;
 function renderAffirm() {
   const list = [...AFFIRMATIONS, ...(DATA.settings.myAffirmations || [])];
+  const wa = (DATA.settings.whyAffirmation || '').trim();
+  if (wa) list.unshift(wa);
   if (myWhy()) list.push(`אני בוחר בהרגלים האלה בשביל ${myWhy()}.`, 'אני אחראי על ההרגלים שלי ועל השינוי שלי.');
   $('#affirm-text').textContent = list[(Math.floor(Date.now() / 86400000) + affirmOffset) % list.length];
 }
@@ -1963,7 +2011,7 @@ function genWallpaper() {
   c.font = '600 34px system-ui'; c.textAlign = 'center';
   c.fillText('ה ל מ ה   ש ל י', W / 2, H * 0.4);
   let y = wrapText(myWhy() || 'אני אחראי על ההרגלים שלי', H * 0.46, 72, '700', '#f2ead9', 96);
-  const aff = AFFIRMATIONS[Math.floor(Date.now() / 86400000) % AFFIRMATIONS.length];
+  const aff = (DATA.settings.whyAffirmation || '').trim() || AFFIRMATIONS[Math.floor(Date.now() / 86400000) % AFFIRMATIONS.length];
   wrapText(aff, y + 80, 44, '300', 'rgba(199,194,183,0.85)', 62);
   c.shadowBlur = 0;
   cv.toBlob(b => {
