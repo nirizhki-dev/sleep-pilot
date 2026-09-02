@@ -284,6 +284,7 @@
   .pico.sm { width: 24px; height: 24px; border-radius: 7px; }
   .bt-e img { width: 36px; height: 36px; border-radius: 11px; object-fit: cover; display: block; box-shadow: 0 2px 10px rgba(0,0,0,0.35); }
   .shimg { width: 54px; height: 54px; border-radius: 16px; object-fit: cover; display: block; }
+  .rankn { width: 26px; height: 26px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); font-weight: 780; font-size: 0.82rem; display: inline-flex; align-items: center; justify-content: center; flex: none; }
   .why-aff { font-size: 0.98rem; line-height: 1.55; color: var(--ink); background: var(--accent-soft); border-radius: 16px; padding: 12px 15px; margin: 4px 0 12px; }
   .se-img { width: 34px; height: 34px; border-radius: 11px; object-fit: cover; flex: none; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
   .gl-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
@@ -460,8 +461,8 @@
 
 
   <section class="card" data-v="journey" id="sec-research">
-    <h2>🔬 המחקר שלי</h2>
-    <p class="sub">המערכת בודקת לבד: אחרי אילו התנהגויות אתה קם רענן יותר?</p>
+    <h2>🏆 מה עובד לי — דירוג אפקטיביות</h2>
+    <p class="sub">כל הרגל נבחן לאורך זמן משלושה מקורות: הדירוג שלך (50) · הנתונים שלך — רענן עם ובלי (30) · התמדה בפועל (20)</p>
     <div id="findings"></div>
   </section>
 
@@ -1521,16 +1522,63 @@ function renderPillars() {
     box.appendChild(det);
   }
 }
+/* דירוג אפקטיביות: כל הרגל שנוסה נבחן לאורך זמן משלושה מקורות ראיה */
+const IDEA_SIG = { light: 'daylight', phoneout: 'noscreen', ifthen: 'ritual', caffeine: 'earlycoffee', cool: 'darkroom',
+  winddown: 'ritual', waketime: 'fresh', 'm-exercise': 'workout', 'm-mindbody': 'mindbody', 'f-earlydinner': 'earlydinner',
+  'f-water': 'water', 'n-breath': 'breath', 'n-meditate': 'meditate', 'd-limit': 'screenlimit', 'd-stream': 'streamstop',
+  's-senior-move': 'mindbody' };
+function effectivenessRows() {
+  const findings = researchRows().filter(r => r.done);
+  const findByKey = Object.fromEntries(findings.map(r => [r.s.key, r]));
+  const last28 = lastNDates(28);
+  const rows = [];
+  const seenSig = new Set();
+  const push = (name, why, st, sigKey, habit) => {
+    const marks = sigKey ? sigDates(sigKey) : new Set();
+    if ((!st || !st.n) && !habit && marks.size < 3) return;
+    if (sigKey) seenSig.add(sigKey);
+    const rScore = st && st.n ? Math.round(((st.avg - 1) / 4) * 50 * Math.min(st.n, 3) / 3) : 0;
+    const f = sigKey && findByKey[sigKey];
+    const delta = f ? f.a - f.b : 0;
+    const dScore = f ? Math.max(0, Math.min(30, Math.round(delta))) : 0;
+    const activeDays = habit ? last28.filter(d => habit.history[d]).length : last28.filter(d => marks.has(d)).length;
+    const cScore = Math.round(activeDays / 28 * 20);
+    rows.push({ name, why, f, st, activeDays, habit: !!habit, score: rScore + dScore + cScore, rScore, dScore, cScore });
+  };
+  for (const i of visibleIdeas()) push(i.title, i.why, stats(i.id), IDEA_SIG[i.id], DATA.habits.find(h => h.ideaId === i.id && h.active));
+  for (const sg of SIGNALS) {
+    if (sg.key === 'fresh' || seenSig.has(sg.key)) continue;
+    if (sigDates(sg.key).size >= 3) push(sg.l, sg.w, null, sg.key, DATA.habits.find(h => h.active && h.name === sg.l));
+  }
+  return rows.sort((a, b) => b.score - a.score);
+}
 function renderResearch() {
-  const rows = researchRows();
   const box = $('#findings');
-  if (!rows.length) { box.innerHTML = '<p class="sub" style="margin:0">התחילו לסמן בחירות יישומיות — הממצא הראשון יופיע כאן לבד.</p>'; return; }
-  rows.sort((a, b) => b.done - a.done);
-  box.innerHTML = rows.map(r => r.done
-    ? `<div class="find">${sigIcon(r.s)}<span class="fd">${r.s.l}<small>על סמך ${r.n1} לילות מול ${r.n2}</small></span>
-       <span class="fv ${r.a >= r.b ? 'up' : 'down'}">רענן ב-${Math.round(r.a)}% ${r.a >= r.b ? '▲' : '▼'} מול ${Math.round(r.b)}%</span></div>`
-    : `<div class="find" style="opacity:0.65">${sigIcon(r.s)}<span class="fd">${r.s.l}<small>${r.marked === 1 ? 'סימון אחד' : r.marked + ' סימונים'} · ${r.need > 0 ? 'עוד ' + r.need + ' לילות לממצא' : 'נדרשים גם לילות בלי הבחירה — להשוואה'}</small></span></div>`
-  ).join('');
+  const rows = effectivenessRows();
+  if (!rows.length) {
+    box.innerHTML = '<p class="sub" style="margin:0">הדירוג ייבנה מהשימוש: דרגו רעיון שניסיתם (1–5), סמנו בחירות יישומיות יום-יום — וכאן יצטבר מה באמת עובד לכם, ולמה.</p>';
+    return;
+  }
+  box.innerHTML = '';
+  rows.forEach((r, k) => {
+    const verdict = r.score >= 70 ? ['אפקטיבי עבורך', 'proven'] : r.score >= 40 ? ['מבטיח — ממשיכים לבחון', 'new'] : ['נאסף מידע', ''];
+    const d = document.createElement('details');
+    d.className = 'idea';
+    d.innerHTML = `<summary><span class="rankn">${k + 1}</span><span class="ititle2"></span>
+        <span class="badge ${verdict[1]}" dir="ltr">${r.score}</span><span class="chev">◀</span></summary>
+      <div class="body">
+        <p class="how" style="font-weight:700">${verdict[0]}</p>
+        <div class="sh-row">⭐ הדירוג שלך <span style="margin-inline-start:auto" dir="ltr">${r.rScore}/50</span></div>
+        ${r.st && r.st.n ? `<p class="src" style="margin:2px 0 6px">ממוצע ${fmt(r.st.avg)} מתוך 5 · ${r.st.n === 1 ? 'דירוג אחד' : r.st.n + ' דירוגים'}${r.st.n < 3 ? ' · עוד ' + (3 - r.st.n) + ' דירוגים יחזקו את הביטחון' : ''}</p>` : '<p class="src" style="margin:2px 0 6px">טרם דורג — נסו ודרגו בספרייה</p>'}
+        <div class="sh-row">🌅 הנתונים שלך <span style="margin-inline-start:auto" dir="ltr">${r.dScore}/30</span></div>
+        ${r.f ? `<p class="src" style="margin:2px 0 6px">על סמך ${r.f.n1} לילות עם מול ${r.f.n2} בלי: קמת רענן ב-${Math.round(r.f.a)}% מול ${Math.round(r.f.b)}%</p>` : '<p class="src" style="margin:2px 0 6px">עוד אין השוואת לילות עם/בלי — סמנו את הבחירה וגם "קמתי רענן"</p>'}
+        <div class="sh-row">📅 התמדה <span style="margin-inline-start:auto" dir="ltr">${r.cScore}/20</span></div>
+        <p class="src" style="margin:2px 0 10px">${r.activeDays ? r.activeDays + ' ימים מתוך 28 האחרונים' + (r.habit ? ' · הרגל מאומץ' : '') : 'טרם סומן בחודש האחרון'}</p>
+        <p class="why" style="background:var(--accent-soft);border-radius:12px;padding:8px 12px">💡 למה זה אמור לעבוד: ${r.why}</p>
+      </div>`;
+    d.querySelector('.ititle2').textContent = r.name;
+    box.appendChild(d);
+  });
 }
 
 /* ---- ייצוא משוב הפיילוט ---- */
