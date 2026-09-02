@@ -49,6 +49,8 @@
   .wrap { position: relative; z-index: 1; width: 100%; max-width: 560px; margin: 0 auto; padding: 22px 16px calc(118px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 13px; }
 
   header { display: flex; align-items: center; gap: 12px; padding: 2px 4px 4px; }
+  .hbtn { width: 42px; height: 42px; border-radius: 14px; flex: none; cursor: pointer; background: var(--card); border: 1px solid var(--hair); color: var(--ink-2); display: flex; align-items: center; justify-content: center; }
+  .hbtn svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
   header .avatar {
     width: 42px; height: 42px; border-radius: 50%; flex: none; border: none; cursor: pointer; font: inherit; font-size: 1.15rem;
     background: radial-gradient(circle at 34% 30%, #b3a7ff, var(--accent-deep));
@@ -383,12 +385,14 @@
 <canvas id="sky" aria-hidden="true"></canvas>
 <div class="wrap" dir="rtl">
   <header id="top">
+    <button class="hbtn" id="settingsbtn" aria-label="הגדרות">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg>
+    </button>
     <button class="avatar" id="avatar" aria-label="החלפת אווטאר">🌙</button>
     <div>
       <div class="greet" id="greet"></div>
       <div class="hdate" id="hdate"></div>
     </div>
-    <button id="bigtext" aria-label="הגדלת טקסט" style="font:inherit;font-weight:800;background:var(--card);border:1px solid var(--hair);color:var(--ink-2);border-radius:12px;padding:8px 12px;cursor:pointer">Aa</button>
     <button id="installbtn" hidden style="font:inherit;font-weight:700;background:linear-gradient(135deg,var(--accent-deep),var(--accent));border:none;color:#fff;border-radius:12px;padding:8px 13px;cursor:pointer">⬇ התקנה</button>
   </header>
 
@@ -616,7 +620,7 @@ const SEED_IDEAS = [
   { id: 's-senior-move', title: 'תנועה עדינה וקצרה (מותאם 60+)', how: 'הליכה קלה, טאי צ׳י או יוגה עדינה — עד 30 דקות, פעמיים בשבוע. לא צריך יותר.', why: 'בגיל 60+ דווקא תוכניות קצרות ועדינות שיפרו שינה יותר מאימונים אינטנסיביים.', source: 'Li et al., Frontiers in Medicine 2025 (מטא-אנליזה, 26 ניסויים)', pillar: 'move' },
   { id: 's-nap30', title: 'תנומת צהריים עד 30 דקות', how: 'טיימר ל-20–30 דקות, מוקדם אחר הצהריים — לא אחרי 16:00.', why: 'תנומה קצרה משפרת ערנות; מעל שעה קשורה לסיכונים בריאותיים ופוגעת בלילה.', source: 'Umbrella review, Public Health Reviews 2026', pillar: 'sleep' },
 ];
-const DEFAULT_DATA = { ideas: SEED_IDEAS, feedback: [], hidden: [], habits: [], settings: {}, signals: [] };
+const DEFAULT_DATA = { ideas: SEED_IDEAS, feedback: [], hidden: [], habits: [], settings: {}, signals: [], sleep: [], activity: [] };
 function loadD() {
   let d;
   try { d = { ...JSON.parse(JSON.stringify(DEFAULT_DATA)), ...JSON.parse(localStorage.getItem('sleep-pilot')) }; }
@@ -2009,19 +2013,203 @@ async function playRitualAudio() {
 }
 function stopRitualAudio() { if (ritualAudio) { ritualAudio.pause(); ritualAudio = null; } }
 
+/* ---- הגדרות + חיבור מכשיר מודד (צמיד/שעון/טבעת) ---- */
+// הפענוח כולו במכשיר: ZIP של Samsung Health (DecompressionStream), export.xml של אפל (קריאה בזרימה), CSV כללי.
+const hm2 = t => String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
+async function importWearable(file, onMsg) {
+  const nights = [], steps = {};
+  const bump = (date, v, max) => { if (!date || !v) return; steps[date] = max ? Math.max(steps[date] || 0, v) : (steps[date] || 0) + v; };
+  const addNight = (a, b, score, src) => {
+    if (isNaN(a) || isNaN(b) || b <= a) return;
+    const hours = Math.round((b - a) / 360000) / 10;
+    if (hours < 1 || hours > 16) return;
+    nights.push({ date: b.toISOString().slice(0, 10), start: hm2(a), end: hm2(b), hours, score: score || null, src });
+  };
+  const parseSleepCsv = (text, src) => {
+    const lines = text.split('\n');
+    const hi = lines[0] && /start_time|(^|,)\s*start\s*(,|$)/i.test(lines[0]) ? 0 : 1;
+    if (!lines[hi]) return;
+    const cols = lines[hi].split(',').map(c => c.trim());
+    const iS = cols.findIndex(c => /(^|\.)start_time$/i.test(c) || /^start$/i.test(c));
+    const iE = cols.findIndex(c => /(^|\.)end_time$/i.test(c) || /^end$/i.test(c));
+    const iSc = cols.findIndex(c => /sleep_score$/i.test(c) || /^score$/i.test(c));
+    if (iS < 0 || iE < 0) return;
+    for (const line of lines.slice(hi + 1)) {
+      const v = line.split(',');
+      if (!v[iS]) continue;
+      addNight(new Date(v[iS].trim().replace(' ', 'T')), new Date(v[iE].trim().replace(' ', 'T')), iSc >= 0 && v[iSc] ? Number(v[iSc]) || null : null, src);
+    }
+  };
+  const parseStepsCsv = text => {
+    const lines = text.split('\n');
+    const hi = /step|count/i.test(lines[0] || '') && !/^com\.samsung/.test(lines[0] || '') ? 0 : 1;
+    if (!lines[hi]) return;
+    const cols = lines[hi].split(',').map(c => c.trim());
+    const iN = cols.findIndex(c => /(^|\.)(step_count|steps)$/i.test(c));
+    const iD = cols.findIndex(c => /(day_time|create_time|start_time|^date$)/i.test(c));
+    if (iN < 0 || iD < 0) return;
+    for (const line of lines.slice(hi + 1)) {
+      const v = line.split(',');
+      const n = Number(v[iN]);
+      if (!n || n < 0 || n > 200000) continue;
+      let d = (v[iD] || '').trim();
+      if (/^\d{12,}$/.test(d)) d = new Date(Number(d)).toISOString().slice(0, 10); else d = d.slice(0, 10);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) bump(d, n, true);
+    }
+  };
+  // ZIP מינימלי: איתור ספריית הקצה, שליפת קבצים רלוונטיים, ניפוח עם DecompressionStream
+  async function parseZip(f) {
+    const buf = new Uint8Array(await f.arrayBuffer());
+    const dv = new DataView(buf.buffer);
+    let eocd = -1;
+    for (let i = buf.length - 22; i >= Math.max(0, buf.length - 66000); i--) {
+      if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('קובץ ZIP לא תקין');
+    let off = dv.getUint32(eocd + 16, true);
+    const count = dv.getUint16(eocd + 10, true);
+    const td = new TextDecoder();
+    for (let e = 0; e < count; e++) {
+      if (dv.getUint32(off, true) !== 0x02014b50) break;
+      const method = dv.getUint16(off + 10, true);
+      const csize = dv.getUint32(off + 20, true);
+      const nlen = dv.getUint16(off + 28, true), xlen = dv.getUint16(off + 30, true), clen = dv.getUint16(off + 32, true);
+      const lho = dv.getUint32(off + 42, true);
+      const name = td.decode(buf.subarray(off + 46, off + 46 + nlen));
+      off += 46 + nlen + xlen + clen;
+      const wantSleep = /shealth\.sleep\.[\d.]*csv$/i.test(name) && !/stage|goal|combined/i.test(name);
+      const wantSteps = /pedometer_day_summary.*csv$/i.test(name);
+      if (!wantSleep && !wantSteps) continue;
+      const lnlen = dv.getUint16(lho + 26, true), lxlen = dv.getUint16(lho + 28, true);
+      const data = buf.subarray(lho + 30 + lnlen + lxlen, lho + 30 + lnlen + lxlen + csize);
+      let text;
+      if (method === 0) text = td.decode(data);
+      else {
+        const ds = new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw')));
+        text = await ds.text();
+      }
+      if (wantSleep) parseSleepCsv(text, 'samsung'); else parseStepsCsv(text);
+    }
+  }
+  // export.xml של אפל — קריאה בזרימה, בלי לטעון הכול לזיכרון
+  async function parseApple(f) {
+    const reader = f.stream().getReader();
+    const td = new TextDecoder();
+    let tail = '', segs = [], done0 = false, read = 0;
+    while (!done0) {
+      const { value, done } = await reader.read();
+      done0 = done;
+      const chunk = tail + (value ? td.decode(value, { stream: true }) : '');
+      const lines = chunk.split('\n');
+      tail = lines.pop() || '';
+      read += value ? value.length : 0;
+      if (onMsg && read % 50e6 < 2e6) onMsg('קורא… ' + Math.round(read / 1e6) + 'MB');
+      for (const line of lines) {
+        if (line.includes('StepCount')) {
+          const m = line.match(/startDate="(\d{4}-\d{2}-\d{2})[^"]*"[\s\S]*?value="(\d+(?:\.\d+)?)"/);
+          if (m) bump(m[1], Number(m[2]), false);
+        } else if (line.includes('SleepAnalysisAsleep')) {
+          const a = line.match(/ startDate="([^"]+)"/), b = line.match(/ endDate="([^"]+)"/);
+          if (a && b) { const x = new Date(a[1]), y = new Date(b[1]); if (!isNaN(x) && !isNaN(y) && y > x) segs.push([x, y]); }
+        }
+      }
+    }
+    const byNight = {};
+    for (const [a, b] of segs) {
+      const key = new Date(b.getHours() >= 15 ? b.getTime() + 86400000 : b.getTime()).toISOString().slice(0, 10);
+      (byNight[key] ||= []).push([a, b]);
+    }
+    for (const [date, ss] of Object.entries(byNight)) {
+      const ms = ss.reduce((t, [a, b]) => t + (b - a), 0);
+      const hours = Math.round(ms / 360000) / 10;
+      if (hours < 1 || hours > 16) continue;
+      const first = new Date(Math.min(...ss.map(x => x[0]))), last = new Date(Math.max(...ss.map(x => x[1])));
+      nights.push({ date, start: hm2(first), end: hm2(last), hours, score: null, src: 'apple' });
+    }
+  }
+
+  if (/\.zip$/i.test(file.name)) await parseZip(file);
+  else if (/\.xml$/i.test(file.name)) await parseApple(file);
+  else { const t = await file.text(); parseSleepCsv(t, 'csv'); parseStepsCsv(t); }
+
+  if (!nights.length && !Object.keys(steps).length) throw new Error('לא זוהו נתוני שינה או צעדים בקובץ');
+  const d = loadD();
+  const byDate = Object.fromEntries((d.sleep || []).map(n => [n.date, n]));
+  let addedSleep = 0;
+  for (const n of nights) if (!byDate[n.date]) { byDate[n.date] = n; addedSleep++; }
+  d.sleep = Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
+  const actBy = Object.fromEntries((d.activity || []).map(a => [a.date, a]));
+  let addedSteps = 0;
+  for (const [date, v] of Object.entries(steps)) {
+    const n = Math.round(v);
+    if (!actBy[date]) { actBy[date] = { date, steps: n }; addedSteps++; }
+    else if (n > (actBy[date].steps || 0)) actBy[date].steps = n;
+  }
+  d.activity = Object.values(actBy).sort((a, b) => a.date.localeCompare(b.date));
+  saveD(d);
+  return { addedSleep, addedSteps, totalSleep: d.sleep.length, totalSteps: d.activity.length };
+}
+
+function settingsSheet() {
+  const d = loadD();
+  const sl = d.sleep || [], ac = d.activity || [];
+  const last7 = sl.slice(-7);
+  const avgH = last7.length ? fmt(last7.reduce((a, n) => a + n.hours, 0) / last7.length) : null;
+  const scored = last7.filter(n => n.score);
+  const avgSc = scored.length ? Math.round(scored.reduce((a, n) => a + n.score, 0) / scored.length) : null;
+  openSheet(`<div class="sh-head"><span class="sh-emoji">${aimg('clearself', 'shimg')}</span>
+    <div><div class="sh-title">הגדרות</div><div class="sh-status">חיבורים, נתונים והתאמות</div></div></div>
+    <div class="sh-sec">⌚ מכשיר מודד — צמיד · שעון · טבעת</div>
+    <p class="sub" style="margin:4px 0 10px">ייבוא קובץ ייצוא מהמכשיר. הנתונים הנמדדים נשמרים אצלך במכשיר בלבד — ובהמשך יוצלבו עם ההרגלים לתובנות אישיות (צעדים ביום ↔ שינה בלילה).</p>
+    ${sl.length || ac.length ? `
+      <div class="sh-row">🌙 <span style="flex:1">${sl.length === 1 ? 'לילה נמדד אחד' : sl.length + ' לילות נמדדים'}${sl.length ? ' · אחרון ' + sl[sl.length - 1].date : ''}</span></div>
+      ${avgH ? `<div class="sh-row">⏱ <span style="flex:1">ממוצע 7 לילות: ${avgH} שעות${avgSc ? ' · ציון שינה ' + avgSc : ''}</span></div>` : ''}
+      <div class="sh-row">🚶 <span style="flex:1">${ac.length === 1 ? 'יום צעדים אחד' : ac.length + ' ימי צעדים'}</span></div>`
+      : '<p class="src" style="margin:0 0 6px">עוד לא יובאו נתונים מהמכשיר</p>'}
+    <div class="row" style="margin:10px 0 4px">
+      <button class="pill solid" id="st-import">📥 ייבוא קובץ מהמכשיר</button>
+      <input type="file" id="st-file" hidden accept=".zip,.xml,.csv,.txt">
+      <span class="sub" id="st-msg" style="margin:0"></span>
+    </div>
+    <p class="src" style="margin:4px 0 0">נתמך: ZIP של Samsung Health (הגדרות ← הורדת נתונים אישיים) · ייצוא "בריאות" של אפל (export.xml) · CSV כללי</p>
+    <div class="sh-sec">תצוגה</div>
+    <div class="row"><button class="pill ${d.settings.bigText ? 'done' : ''}" id="st-bigtext">Aa טקסט מוגדל — ${d.settings.bigText ? 'פועל' : 'כבוי'}</button></div>
+    ${sl.length || ac.length ? '<div class="sh-sec">ניקוי</div><div class="row"><button class="ghost" id="st-clearwear">מחיקת נתוני המכשיר המיובאים</button></div>' : ''}`);
+  $('#st-import').onclick = () => $('#st-file').click();
+  $('#st-file').onchange = async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const msg = $('#st-msg');
+    msg.textContent = '⏳ מפענח את הקובץ…';
+    try {
+      const r = await importWearable(f, t => { msg.textContent = '⏳ ' + t; });
+      toast(`⌚ נוספו ${r.addedSleep} לילות ו-${r.addedSteps} ימי צעדים (סה"כ ${r.totalSleep} לילות)`);
+      confetti(); vibrate(25);
+      DATA = await api('/api/data');
+      settingsSheet();
+    } catch (err) { msg.textContent = '⚠️ ' + err.message; }
+  };
+  $('#st-bigtext').onclick = async () => {
+    await api('/api/settings', { bigText: !DATA.settings.bigText });
+    DATA = await api('/api/data');
+    applyBigText();
+    settingsSheet();
+  };
+  const cw = $('#st-clearwear');
+  if (cw) cw.onclick = async () => {
+    if (await confirmSheet('למחוק את נתוני המכשיר?', 'הלילות והצעדים שיובאו יימחקו — אפשר לייבא שוב מקובץ בכל רגע', 'מחיקה', aimg('release', 'shimg'))) {
+      const dd = loadD(); dd.sleep = []; dd.activity = []; saveD(dd);
+      DATA = await api('/api/data');
+      toast('🧹 נתוני המכשיר נמחקו'); settingsSheet();
+    }
+  };
+}
+$('#settingsbtn').onclick = () => settingsSheet();
+
 /* ---- מצב טקסט גדול (נגישות) ---- */
 function applyBigText() {
-  const on = !!DATA.settings.bigText;
-  document.documentElement.style.fontSize = on ? '119%' : '';
-  $('#bigtext').style.background = on ? 'var(--accent-soft)' : 'var(--card)';
-  $('#bigtext').style.color = on ? 'var(--accent)' : 'var(--ink-2)';
+  document.documentElement.style.fontSize = DATA.settings.bigText ? '119%' : '';
 }
-$('#bigtext').onclick = async () => {
-  await api('/api/settings', { bigText: !DATA.settings.bigText });
-  DATA = await api('/api/data');
-  applyBigText();
-  toast(DATA.settings.bigText ? 'Aa טקסט מוגדל — נוח יותר לעיניים' : 'טקסט רגיל');
-};
 
 /* ---- מחולל טפט: הלמה על מסך הנעילה — לילה ריאליסטי, כהה ושקט ---- */
 function genWallpaper() {
