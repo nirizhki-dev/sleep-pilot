@@ -1228,13 +1228,15 @@ function renderIdeas() {
 
 /* ---- הלמה שלי: הבסיס של האחריות האישית ---- */
 const WHYS = [
-  { e: '🕊️', t: 'חופש תנועה בגוף בריא', d: 'לנוע, לחקור ולרקוד בעולם', a: 'בכל נשימה אני מתחזק, נהיה קליל ומתמלא אנרגיה לרקוד עם אהוביי.' },
-  { e: '💞', t: 'מערכות יחסים עמוקות ונוכחות אמיתית', d: 'להיות שם באמת — קשוב ופנוי לאנשים שאני אוהב', a: 'אני נוכח, סבלני ומלא קשב עם האנשים שאני אוהב.' },
-  { e: '😊', t: 'אושר יומיומי וראיית הטוב', d: 'לקום אל בוקר צלול ולשמוח במה שיש', a: 'אני קם צלול אל הבוקר, ורואה את הטוב שממלא את היום שלי.' },
-  { e: '👨‍👧', t: 'הורות ראויה — דוגמה אישית לילדים', d: 'להיות ההורה הרגוע והיציב שהילדים גדלים לצידו', a: 'אני ההורה הרגוע והנוכח שהילדים שלי לומדים ממנו מהי שלווה.' },
-  { e: '⚡', t: 'אנרגיה ליצירה ולעשייה', d: 'כוח מלא לרעיונות, לעבודה ולחלומות שלי', a: 'אני מתעורר מלא כוח, והאנרגיה שלי זורמת אל מה שחשוב לי.' },
-  { e: '🧭', t: 'להיות נאמן לעצמי ולמילה שלי', d: 'לעמוד במה שהבטחתי לעצמי, ערב אחרי ערב', a: 'אני עומד במילה שלי לעצמי — וכל ערב מוכיח לי את זה מחדש.' },
+  { e: '🕊️', t: 'חופש תנועה בגוף בריא', pre: 'בכל נשימה אני מתחזק, נהיה קליל ומתמלא אנרגיה', opts: ['לרקוד עם אהוביי', 'לטייל ולחקור בעולם', 'לשחק עם הילדים', 'להרגיש חזק וקליל בגוף', 'לנוע בחופשיות ובלי כאב'] },
+  { e: '💞', t: 'מערכות יחסים עמוקות ונוכחות אמיתית', pre: 'אני רגוע, פתוח ומלא קשב', opts: ['עם האנשים שאני אוהב', 'ברגעים הקטנים של היומיום', 'בזמן איכות אמיתי עם המשפחה', 'בשיחות עמוקות עם חברים', 'גם עם עצמי'] },
+  { e: '😊', t: 'אושר יומיומי וראיית הטוב', pre: 'אני קם צלול ושמח, ורואה את הטוב', opts: ['בבוקר שמתחיל', 'באנשים שסביבי', 'בדברים הקטנים', 'בדרך שאני עושה', 'בעצמי'] },
+  { e: '👨‍👧', t: 'הורות ראויה — דוגמה אישית לילדים', pre: 'אני הורה רגוע ונוכח, והילדים שלי לומדים ממני', opts: ['מהי שלווה', 'איך אוהבים', 'איך שומרים על הגוף', 'מהי התמדה', 'איך צומחים מטעויות'] },
+  { e: '⚡', t: 'אנרגיה ליצירה ולעשייה', pre: 'אני מתעורר מלא כוח, והאנרגיה שלי זורמת', opts: ['אל היצירה שלי', 'אל העבודה שחשובה לי', 'אל החלומות שאני מגשים', 'אל למידה וצמיחה', 'אל האנשים שלצידי'] },
+  { e: '🧭', t: 'להיות נאמן לעצמי ולמילה שלי', pre: 'אני עומד במילה שלי לעצמי', opts: ['ערב אחרי ערב', 'בקטן ובגדול', 'גם כשקשה', 'ובוחר בעצמי מחדש כל בוקר', 'והביטחון שלי גדל מזה'] },
 ];
+// חיבור עברי טבעי: "א, ב וגם־ג"
+const joinHe = arr => arr.length <= 1 ? (arr[0] || '') : arr.slice(0, -1).join(', ') + ' ו' + arr[arr.length - 1];
 const myWhy = () => (DATA.settings.why || '').trim();
 
 function renderWhy() {
@@ -1295,11 +1297,57 @@ function renderWhy() {
 }
 
 /* בונה הלמה: למה → מה זה אומר בשבילי → המשפט שיוצר את זה (בלשון הווה) */
+function whyCategoryBuilder(sel) {
+  const w = WHYS[sel];
+  const chosen = new Set([0]);
+  let dirty = false;
+  openSheet(`
+    <div class="sh-head"><span class="sh-emoji">${aimg(WHY_AV[sel], 'shimg')}</span>
+      <div><div class="sh-title">${w.t}</div>
+      <div class="sh-status">מה זה אומר בשבילך? בחר עד שלוש — והמשפט ייכתב מעצמו</div></div></div>
+    <div class="sigs" id="wc-opts">${w.opts.map((o, k) => `<button class="sig ${k === 0 ? 'on' : ''}" data-k="${k}"><span class="sl">${o}</span></button>`).join('')}</div>
+    <div class="sh-sec" style="margin:14px 0 4px">המשפט שיוצר את זה</div>
+    <div class="addidea">
+      <input id="wc-aff" maxlength="180">
+      <p class="sub" style="margin:6px 0 0">נכתב אוטומטית מהבחירות שלך — ואפשר לעדן במילים שלך. בלשון הווה, כאילו זה כבר קורה.</p>
+      <div class="row" style="margin-top:12px">
+        <button class="pill solid" id="wc-save">✓ זו הלמה שלי</button>
+        <button class="ghost" id="wc-cancel">ביטול</button>
+      </div>
+    </div>`);
+  const picks = () => [...chosen].sort((a, b) => a - b).map(k => w.opts[k]);
+  const compose = () => `${w.pre} ${joinHe(picks())}.`;
+  const aff = $('#wc-aff');
+  aff.value = compose();
+  aff.oninput = () => { dirty = true; };
+  for (const b of document.querySelectorAll('#wc-opts .sig')) {
+    b.onclick = () => {
+      const k = +b.dataset.k;
+      if (chosen.has(k)) {
+        if (chosen.size === 1) return;
+        chosen.delete(k); b.classList.remove('on');
+      } else if (chosen.size >= 3) { toast('עד שלוש בחירות — כדי שהמשפט יישאר חד'); return; }
+      else { chosen.add(k); b.classList.add('on'); }
+      if (!dirty) aff.value = compose();
+      vibrate(15);
+    };
+  }
+  $('#wc-cancel').onclick = closeSheet;
+  $('#wc-save').onclick = async () => {
+    await api('/api/settings', { why: w.e + ' ' + w.t, whyDesc: joinHe(picks()), whyAffirmation: aff.value.trim() || compose(), whySetAt: todayISO() });
+    closeSheet();
+    toast('🎯 הלמה נקבעה — והמשפט שלך יוצר אותה מעכשיו');
+    confetti(true); vibrate([40, 60, 40]);
+    refresh();
+  };
+}
+
 function whyBuilder(sel, freeTitle) {
-  const base = typeof sel === 'number' ? WHYS[sel] : null;
+  if (typeof sel === 'number') return whyCategoryBuilder(sel);
+  const base = null;
   const editing = sel === 'edit';
   openSheet(`
-    <div class="sh-head"><span class="sh-emoji">${aimg(base ? WHY_AV[sel] : 'awareness', 'shimg')}</span>
+    <div class="sh-head"><span class="sh-emoji">${aimg('awareness', 'shimg')}</span>
       <div><div class="sh-title">בניית הלמה שלי</div>
       <div class="sh-status">למה → מה זה אומר בשבילי → המשפט שיוצר את זה</div></div></div>
     <div class="addidea" style="margin-top:6px">
@@ -1315,9 +1363,9 @@ function whyBuilder(sel, freeTitle) {
         <button class="ghost" id="wb-cancel">ביטול</button>
       </div>
     </div>`);
-  $('#wb-title').value = base ? base.e + ' ' + base.t : (editing ? myWhy() : (freeTitle || ''));
-  $('#wb-desc').value = base ? base.d : (editing ? DATA.settings.whyDesc || '' : '');
-  $('#wb-aff').value = base ? base.a : (editing ? DATA.settings.whyAffirmation || '' : '');
+  $('#wb-title').value = editing ? myWhy() : (freeTitle || '');
+  $('#wb-desc').value = editing ? DATA.settings.whyDesc || '' : '';
+  $('#wb-aff').value = editing ? DATA.settings.whyAffirmation || '' : '';
   $('#wb-cancel').onclick = closeSheet;
   $('#wb-save').onclick = async () => {
     const why = $('#wb-title').value.trim();
