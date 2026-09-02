@@ -2,7 +2,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#0e162c">
-<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" type="image/png" href="./icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -135,7 +135,7 @@
   /* ברכת פתיחה יומית */
   #greet-splash {
     position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
-    background: rgba(7,10,20,0.72); backdrop-filter: blur(10px); opacity: 1; transition: opacity 0.5s;
+    background: rgba(7,10,20,0.72); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 1; transition: opacity 0.5s;
   }
   #greet-splash[hidden] { display: none; }
   #greet-splash.bye { opacity: 0; }
@@ -265,7 +265,7 @@
 
   #sheet { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
   #sheet[hidden] { display: none; }
-  #sheet .backdrop { position: absolute; inset: 0; background: rgba(5,6,10,0.62); backdrop-filter: blur(6px); }
+  #sheet .backdrop { position: absolute; inset: 0; background: rgba(5,6,10,0.62); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
   #sheet .panel { position: relative; width: 100%; max-width: 560px; max-height: 86vh; overflow-y: auto; background: var(--card); border-radius: 30px 30px 0 0; padding: 14px 24px calc(34px + env(safe-area-inset-bottom, 0px)); direction: rtl; }
   #sheet .grip { width: 44px; height: 5px; border-radius: 99px; background: var(--ring-track); margin: 0 auto 14px; }
   #sheet .close { position: absolute; top: 14px; left: 14px; width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--card-2); color: var(--ink-2); cursor: pointer; font-size: 0.95rem; }
@@ -365,7 +365,7 @@
   #toast.show { opacity: 1; }
   #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 8; }
 
-  nav.float { position: fixed; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); z-index: 5; display: flex; gap: 4px; padding: 7px; border-radius: 999px; background: var(--nav-bg); backdrop-filter: blur(18px); box-shadow: 0 10px 30px rgba(0,0,0,0.35); border: 1px solid var(--hair); }
+  nav.float { position: fixed; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); z-index: 5; display: flex; gap: 4px; padding: 7px; border-radius: 999px; background: var(--nav-bg); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); box-shadow: 0 10px 30px rgba(0,0,0,0.35); border: 1px solid var(--hair); }
   nav.float button { font: inherit; font-size: 0.68rem; font-weight: 600; cursor: pointer; border: none; background: none; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 15px; border-radius: 999px; }
   nav.float button.on { background: var(--accent-soft); color: var(--accent); }
   nav.float svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -2560,7 +2560,21 @@ addEventListener('beforeinstallprompt', e => {
   deferredInstall = e;
   $('#installbtn').hidden = false;
 });
+// אייפון: אין beforeinstallprompt — מזהים ספארי-iOS שלא מותקן ומציגים מדריך
+const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IS_STANDALONE = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+if (IS_IOS && !IS_STANDALONE) $('#installbtn').hidden = false;
+function iosInstallSheet() {
+  openSheet(`<div class="sh-head"><span class="sh-emoji">${aimg('calm', 'shimg')}</span>
+    <div><div class="sh-title">התקנה על האייפון</div>
+    <div class="sh-status">שלושה צעדים — והאפליקציה על מסך הבית</div></div></div>
+    <div class="sh-row">1️⃣ &nbsp;הקש על כפתור השיתוף <b>⬆️</b> בסרגל של ספארי (למטה באמצע)</div>
+    <div class="sh-row">2️⃣ &nbsp;גלול ובחר <b>"הוסף למסך הבית"</b> (Add to Home Screen)</div>
+    <div class="sh-row">3️⃣ &nbsp;הקש <b>"הוסף"</b> — אייקון הירח יופיע במסך הבית</div>
+    <p class="sh-deep" style="margin-top:12px">מרגע ההתקנה האפליקציה נפתחת במסך מלא, עובדת גם בלי אינטרנט, והנתונים שלך נשמרים במכשיר לאורך זמן.</p>`);
+}
 $('#installbtn').onclick = async () => {
+  if (IS_IOS && !deferredInstall) { iosInstallSheet(); return; }
   if (!deferredInstall) return;
   deferredInstall.prompt();
   const { outcome } = await deferredInstall.userChoice;
