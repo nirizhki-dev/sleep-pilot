@@ -284,6 +284,12 @@
   .pico.sm { width: 24px; height: 24px; border-radius: 7px; }
   .bt-e img { width: 36px; height: 36px; border-radius: 11px; object-fit: cover; display: block; box-shadow: 0 2px 10px rgba(0,0,0,0.35); }
   .shimg { width: 54px; height: 54px; border-radius: 16px; object-fit: cover; display: block; }
+  .se-img { width: 34px; height: 34px; border-radius: 11px; object-fit: cover; flex: none; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .gl-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .bdg img.e { object-fit: cover; padding: 0; }
+  .avgrid.mini { grid-template-columns: repeat(6, 1fr); gap: 7px; }
+  .avgrid.mini .av { padding: 4px; border-radius: 12px; }
+  .avgrid.mini .av img { border-radius: 9px; }
   .sig .se, .trow .se, .find .fe, .bdg .e, .sh-emoji {
     display: inline-flex; align-items: center; justify-content: center; flex: none;
     width: 36px; height: 36px; border-radius: 11px; font-size: 1.05rem; line-height: 1;
@@ -641,7 +647,7 @@ async function api(path, body) {
     const h = d.habits.find(h => h.id === body.id);
     if (body.name && body.name.trim()) h.name = body.name.trim().slice(0, 80);
     if (body.plan !== undefined) h.plan = String(body.plan).trim().slice(0, 200);
-    if (body.icon) h.icon = String(body.icon).trim().slice(0, 8);
+    if (body.icon) h.icon = String(body.icon).trim().slice(0, 24);
   } else if (path === '/api/settings') {
     d.settings = { ...d.settings, ...body };
   } else if (path === '/api/signals/toggle') {
@@ -848,7 +854,7 @@ function askSheet(title, sub, placeholder, def = '') {
 }
 
 /* אישור מעוצב (במקום confirm של הדפדפן): אישור=true, ביטול=false */
-function confirmSheet(title, sub, okLabel = 'אישור', emoji = '🌘') {
+function confirmSheet(title, sub, okLabel = 'אישור', emoji = aimg('calm', 'shimg')) {
   return new Promise(resolve => {
     openSheet(`
       <div class="sh-head"><span class="sh-emoji">${emoji}</span>
@@ -868,7 +874,7 @@ function intentSheet(habitTitle) {
   return new Promise(resolve => {
     let sel = 0;
     openSheet(`
-      <div class="sh-head"><span class="sh-emoji">🎯</span>
+      <div class="sh-head"><span class="sh-emoji">${aimg('awareness', 'shimg')}</span>
         <div><div class="sh-title">מתי זה יקרה?</div>
         <div class="sh-status">מצמידים את ההרגל החדש לפעולה שכבר קיימת — הקשה אחת</div></div></div>
       <div class="sigs" id="it-chips" style="margin:10px 0">
@@ -901,17 +907,10 @@ function intentSheet(habitTitle) {
 }
 function achScreen(a) {
   const won = a.won(); const [cur, max, unit] = a.prog();
-  openSheet(`<div class="sh-head"><span class="sh-emoji">${a.e}</span><div><div class="sh-title">${a.n}</div>
+  openSheet(`<div class="sh-head"><span class="sh-emoji">${aimg(ACH_AV[a.id] || 'clarity', 'shimg')}</span><div><div class="sh-title">${a.n}</div>
     <div class="sh-status ${won ? 'won' : ''}">${won ? '✓ הושג — +25 נק׳' : 'טרם הושג'}</div></div></div>
     <p class="sh-deep">${a.deep}</p><div class="sh-sec">ההתקדמות שלך</div>${progBar(cur, max)}
     <div class="xpnext">${cur}/${max} ${unit}</div>`);
-}
-const EMOJIS = ['🌙','☀️','😴','🛏️','📵','🔕','🛁','🚿','☕','🍵','🧊','❄️','⏰','📖','🕯️','🎧','🧘','🫧','🌿','🌅','🏃','🚶','💧','⭐'];
-function emojiPicker(current, onPick) {
-  return {
-    html: `<div class="emgrid">${EMOJIS.map(e => `<button class="${e === current ? 'sel' : ''}" data-e="${e}">${e}</button>`).join('')}</div>`,
-    wire(root) { for (const b of root.querySelectorAll('.emgrid button')) b.onclick = () => onPick(b.dataset.e); }
-  };
 }
 
 /* ---- אווטארים מנטליים: בחירת מצב פנימי (הנכסים ב-avatars/) ---- */
@@ -930,6 +929,17 @@ const avatarOf = v => AVATARS.find(a => 'av:' + a.id === v);
 const PILLAR_AV = { sleep: 'calm', move: 'flow', food: 'grounding', mind: 'presence', digital: 'witness' };
 const THEME_AV = { move: 'flow', light: 'vitality', food: 'grounding', env: 'stability', digital: 'witness', mind: 'presence', sleepcore: 'calm' };
 const aimg = (id, cls = 'pico') => `<img class="${cls}" src="./avatars/${id}.png" alt="" loading="lazy">`;
+/* כל אייקון פיקטוריאלי — מנכסי הפרומפט המרכזי (app/DESIGN.md). אימוג'י רק בתוך טקסט. */
+const SIG_AV = { noscreen: 'release', easysleep: 'calm', fresh: 'renewal', darkroom: 'space', earlycoffee: 'clarity', ritual: 'quiet',
+  steps: 'journey', workout: 'innerpower', mindbody: 'presence', daylight: 'vitality',
+  earlydinner: 'grounding', water: 'flow', nosugar: 'clearself', mindfuleat: 'acceptance',
+  screenlimit: 'witness', streamstop: 'stability', nophonewake: 'lightness', socialbatch: 'reflection',
+  meditate: 'presence', breath: 'breath', gratitude: 'selflove', calm: 'space' };
+const ACH_AV = { 'first-rating': 'clarity', 'rater-5': 'awareness', 'first-habit': 'growth', 'streak-3': 'innerpower', 'streak-7': 'vitality', comeback: 'stability', 'signal-3': 'reflection', researcher: 'clearself', teacher: 'compassion', helper3: 'selflove', 'exp-1': 'change', 'why-set': 'journey' };
+const WHY_AV = ['lightness', 'selflove', 'vitality', 'compassion', 'innerpower', 'clearself'];
+const sigIcon = s => SIG_AV[s.key] ? aimg(SIG_AV[s.key], 'se-img') : `<span class="se">${s.e}</span>`;
+const habitIcon = (h, cls = 'se-img') => h.icon && h.icon.startsWith('av:') ? aimg(h.icon.slice(3), cls)
+  : (h.icon ? `<span class="se">${h.icon}</span>` : aimg('growth', cls));
 // ערכי אימוג'י ישנים ממשיכים לעבוד — נופלים חזרה לטקסט
 const avatarHTML = v => { const a = avatarOf(v); return a ? `<img class="avimg" src="./avatars/${a.id}.png" alt="${a.n}">` : (v || '🌙'); };
 function avatarScreen() {
@@ -951,7 +961,7 @@ function avatarScreen() {
 function habitScreen(h) {
   const idea = DATA.ideas.find(i => i.id === h.ideaId);
   const since = new Date(h.createdAt + 'T12:00:00').toLocaleDateString('he-IL', { day: 'numeric', month: 'long' });
-  openSheet(`<div class="sh-head"><span class="sh-emoji">${h.icon || '🎯'}</span><div><div class="sh-title">${h.name}</div><div class="sh-status">במעקב מאז ${since}</div></div></div>
+  openSheet(`<div class="sh-head"><span class="sh-emoji">${habitIcon(h, 'shimg')}</span><div><div class="sh-title">${h.name}</div><div class="sh-status">במעקב מאז ${since}</div></div></div>
     ${h.plan ? `<p class="sh-deep">כוונת היישום: "${h.plan}"</p>` : ''}
     ${idea ? `<p class="sh-deep">למה זה עובד: ${idea.why}</p>` : ''}
     <div class="sh-sec">המספרים שלך</div>
@@ -969,11 +979,15 @@ function habitScreen(h) {
   const body = $('#sheet-body');
   body.querySelector('#hs-name').value = h.name;
   body.querySelector('#hs-plan').value = h.plan || '';
-  const p = emojiPicker(h.icon, async e => {
+  const p = {
+    html: `<div class="avgrid mini">${AVATARS.map(a => `<button class="av ${h.icon === 'av:' + a.id ? 'sel' : ''}" data-a="${a.id}" aria-label="${a.n}"><img src="./avatars/${a.id}.png" alt="" loading="lazy"></button>`).join('')}</div>`,
+    wire(root) { for (const b of root.querySelectorAll('.av')) b.onclick = () => p.pick('av:' + b.dataset.a); },
+  };
+  p.pick = async e => {
     await api('/api/habits/update', { id: h.id, icon: e });
-    toast(`${e} האייקון עודכן`); DATA = await api('/api/data');
+    toast('✓ האייקון עודכן'); DATA = await api('/api/data');
     habitScreen(DATA.habits.find(x => x.id === h.id)); renderHabits();
-  });
+  };
   body.querySelector('#hs-picker').innerHTML = p.html;
   p.wire(body.querySelector('#hs-picker'));
   body.querySelector('#hs-save').onclick = async () => {
@@ -1023,7 +1037,7 @@ function renderToday() {
     const st = streak(h);
     const row = document.createElement('button');
     row.className = 'trow' + (done ? ' on' : '');
-    row.innerHTML = `<span class="se">${h.icon || '🎯'}</span>
+    row.innerHTML = `${habitIcon(h)}
       <span class="tinfo"><b>${''}</b>${weekDots(d => h.history[d])}</span>
       <span class="tmark">${st >= 2 ? `<i>${st >= 21 ? '👑' : st >= 7 ? '🏆' : '🔥'}${st}</i>` : ''}${done ? '<em>✓</em>' : '<em class="todo">סמן</em>'}</span>`;
     row.querySelector('b').textContent = h.name;
@@ -1042,7 +1056,7 @@ function renderToday() {
     const b = document.createElement('button');
     b.className = 'sig tall' + (on ? ' on' : '');
     b.setAttribute('aria-pressed', on);
-    b.innerHTML = `<span class="se">${sg.e}</span><span class="sl">${sg.l}<br>${weekDots(d => sigDates(sg.key).has(d))}</span>${st >= 2 ? `<span class="sk">🔥${st}</span>` : ''}`;
+    b.innerHTML = `${sigIcon(sg)}<span class="sl">${sg.l}<br>${weekDots(d => sigDates(sg.key).has(d))}</span>${st >= 2 ? `<span class="sk">🔥${st}</span>` : ''}`;
     if (activeExp()?.signalKey === sg.key) b.classList.add('exp-star');
     b.onclick = async e => {
       const r = await api('/api/signals/toggle', { key: sg.key, date: todayISO() });
@@ -1066,7 +1080,7 @@ $('#tb-streak').onclick = () => streakScreen();
 $('#tb-ring').onclick = () => {
   const active = DATA.habits.filter(h => h.active);
   const favs = favSignals();
-  openSheet(`<div class="sh-head"><span class="sh-emoji">⭕</span><div><div class="sh-title">השלמת היום</div>
+  openSheet(`<div class="sh-head"><span class="sh-emoji">${aimg('awareness', 'shimg')}</span><div><div class="sh-title">השלמת היום</div>
     <div class="sh-status">הטבעת נסגרת כשכל לוח היום מסומן — ומתאפסת כל בוקר</div></div></div>
     ${active.map(h => `<div class="sh-row">${h.history[todayISO()] ? '✅' : '⬜'} ${h.icon || '🎯'} ${h.name}</div>`).join('')}
     ${favs.map(x => `<div class="sh-row">${sigDates(x.key).has(todayISO()) ? '✅' : '⬜'} ${x.e} ${x.l}</div>`).join('')}`);
@@ -1075,7 +1089,7 @@ $('#tb-edit').onclick = () => {
   const cur = favSignals().map(x => x.key);
   openSheet(`<div class="sh-head"><span class="sh-emoji">✏️</span><div><div class="sh-title">המועדפים שלי</div>
     <div class="sh-status">עד 6 בחירות שיופיעו בלוח היום — השאר תמיד זמינות ב"כל הבחירות"</div></div></div>
-    <div class="sigs" id="fav-grid">${SIGNALS.map(x => `<button class="sig ${cur.includes(x.key) ? 'on' : ''}" data-k="${x.key}"><span class="se">${x.e}</span><span class="sl">${x.l}</span></button>`).join('')}</div>
+    <div class="sigs" id="fav-grid">${SIGNALS.map(x => `<button class="sig ${cur.includes(x.key) ? 'on' : ''}" data-k="${x.key}">${sigIcon(x)}<span class="sl">${x.l}</span></button>`).join('')}</div>
     <div class="row" style="margin-top:12px"><button class="pill solid" id="fav-save">שמירה</button></div>`);
   const sel = new Set(cur);
   for (const b of document.querySelectorAll('#fav-grid .sig')) {
@@ -1137,7 +1151,6 @@ function renderTonight() {
 }
 $('#moon-tile').onclick = () => { showView('library'); if (TONIGHT) $('#tonight-detail').hidden = false; };
 
-const GLYPHS = ['🌙','☀️','📵','🛁','☕','🧊','⏰','📖','🫧','🧘'];
 function renderHabits() {
   const box = $('#habits');
   const active = DATA.habits.filter(h => h.active);
@@ -1148,7 +1161,7 @@ function renderHabits() {
     const row = document.createElement('div');
     row.className = 'habit';
     row.innerHTML = `
-      <button class="glyph" aria-label="פרטי ההרגל">${h.icon || GLYPHS[idx % GLYPHS.length]}</button>
+      <button class="glyph" aria-label="פרטי ההרגל">${habitIcon(h, 'gl-img')}</button>
       <div class="info"><div class="hname"></div><div class="hplan"></div></div>
       <div class="meta">
         <div class="dots">${days.map(d => `<span class="${h.history[d] ? 'on' : ''}"></span>`).join('')}</div>
@@ -1170,7 +1183,7 @@ function renderHabits() {
       refresh();
     };
     row.querySelector('.archive').onclick = async () => {
-      if (await confirmSheet(`לשחרר את "${h.name}"?`, 'ההיסטוריה נשמרת — אפשר לאמץ מחדש בכל רגע', 'שחרור ההרגל', '🕊️')) { await api('/api/habits/archive', { id: h.id }); refresh(); }
+      if (await confirmSheet(`לשחרר את "${h.name}"?`, 'ההיסטוריה נשמרת — אפשר לאמץ מחדש בכל רגע', 'שחרור ההרגל', aimg('lightness', 'shimg'))) { await api('/api/habits/archive', { id: h.id }); refresh(); }
     };
     box.appendChild(row);
   });
@@ -1184,7 +1197,7 @@ function renderJourney() {
   $('#lv-pts').textContent = `${pts} נק׳`;
   $('#xpfill').style.width = Math.round(Math.min(1, next ? (pts - cur[0]) / (next[0] - cur[0]) : 1) * 100) + '%';
   $('#lv-next').textContent = next ? `עוד ${next[0] - pts} נק׳ לדרגת "${next[1]}"` : 'הדרגה הגבוהה ביותר!';
-  $('#badges').innerHTML = ACH.map((a, k) => `<button class="bdg ${a.won() ? 'won' : ''}" data-k="${k}"><span class="e">${a.e}</span><span class="n">${a.n}</span></button>`).join('');
+  $('#badges').innerHTML = ACH.map((a, k) => `<button class="bdg ${a.won() ? 'won' : ''}" data-k="${k}"><img class="e" src="./avatars/${ACH_AV[a.id] || 'clarity'}.png" alt="" loading="lazy"><span class="n">${a.n}</span></button>`).join('');
   for (const b of $('#badges').querySelectorAll('.bdg')) b.onclick = () => achScreen(ACH[+b.dataset.k]);
 }
 function renderIdeas() {
@@ -1227,7 +1240,7 @@ function renderWhy() {
   const box = $('#whybox');
   const w = myWhy();
   if (!w) {
-    box.innerHTML = `<div class="sigs">${WHYS.map((x, i) => `<button class="sig" data-i="${i}"><span class="se">${x.e}</span><span class="sl">${x.t}</span></button>`).join('')}</div>
+    box.innerHTML = `<div class="sigs">${WHYS.map((x, i) => `<button class="sig" data-i="${i}">${aimg(WHY_AV[i], 'se-img')}<span class="sl">${x.t}</span></button>`).join('')}</div>
       <div class="addidea" style="margin-top:10px">
         <input id="why-free" placeholder="או במילים שלך: אני עושה את זה בשביל…" maxlength="120">
         <button class="pill solid" id="why-save" style="justify-self:start">זו הלמה שלי</button>
@@ -1391,7 +1404,7 @@ function renderPillars() {
       const b = document.createElement('button');
       b.className = 'sig' + (on ? ' on' : '');
       b.setAttribute('aria-pressed', on);
-      b.innerHTML = `<span class="se">${s.e}</span><span class="sl">${s.l}</span>${st >= 2 ? `<span class="sk">🔥×${st}</span>` : ''}`;
+      b.innerHTML = `${sigIcon(s)}<span class="sl">${s.l}</span>${st >= 2 ? `<span class="sk">🔥×${st}</span>` : ''}`;
       if (activeExp()?.signalKey === s.key) b.classList.add('exp-star');
       b.onclick = async e => {
         const r = await api('/api/signals/toggle', { key: s.key, date: todayISO() });
@@ -1418,9 +1431,9 @@ function renderResearch() {
   if (!rows.length) { box.innerHTML = '<p class="sub" style="margin:0">התחילו לסמן בחירות יישומיות — הממצא הראשון יופיע כאן לבד.</p>'; return; }
   rows.sort((a, b) => b.done - a.done);
   box.innerHTML = rows.map(r => r.done
-    ? `<div class="find"><span class="fe">${r.s.e}</span><span class="fd">${r.s.l}<small>על סמך ${r.n1} לילות מול ${r.n2}</small></span>
+    ? `<div class="find">${sigIcon(r.s)}<span class="fd">${r.s.l}<small>על סמך ${r.n1} לילות מול ${r.n2}</small></span>
        <span class="fv ${r.a >= r.b ? 'up' : 'down'}">רענן ב-${Math.round(r.a)}% ${r.a >= r.b ? '▲' : '▼'} מול ${Math.round(r.b)}%</span></div>`
-    : `<div class="find" style="opacity:0.65"><span class="fe">${r.s.e}</span><span class="fd">${r.s.l}<small>${r.marked === 1 ? 'סימון אחד' : r.marked + ' סימונים'} · ${r.need > 0 ? 'עוד ' + r.need + ' לילות לממצא' : 'נדרשים גם לילות בלי הבחירה — להשוואה'}</small></span></div>`
+    : `<div class="find" style="opacity:0.65">${sigIcon(r.s)}<span class="fd">${r.s.l}<small>${r.marked === 1 ? 'סימון אחד' : r.marked + ' סימונים'} · ${r.need > 0 ? 'עוד ' + r.need + ' לילות לממצא' : 'נדרשים גם לילות בלי הבחירה — להשוואה'}</small></span></div>`
   ).join('');
 }
 
@@ -1467,7 +1480,7 @@ async function renderDailyResearch() {
   renderStudies();
   $('#dr-archive').style.display = RESEARCH.length > 1 ? '' : 'none';
   $('#dr-archive').onclick = () => openSheet(`
-    <div class="sh-head"><span class="sh-emoji">🧪</span><div><div class="sh-title">ארכיון המחקרים</div>
+    <div class="sh-head"><span class="sh-emoji">${aimg('clearself', 'shimg')}</span><div><div class="sh-title">ארכיון המחקרים</div>
     <div class="sh-status">${RESEARCH.length} תובנות שנאספו</div></div></div>
     ${RESEARCH.map(x => `<div class="sh-row" style="flex-direction:column;align-items:flex-start;gap:3px">
       <b>${x.title}</b>
@@ -2007,7 +2020,7 @@ async function finishExperiment(verdictOnly) {
   const log = [...(DATA.settings.expLog || []), { ...ex, endedAt: todayISO(), days, worked }];
   await api('/api/settings', { experiment: null, expLog: log });
   openSheet(`
-    <div class="sh-head"><span class="sh-emoji">${worked ? '🏆' : '🔬'}</span>
+    <div class="sh-head"><span class="sh-emoji">${aimg(worked ? 'change' : 'clearself', 'shimg')}</span>
       <div><div class="sh-title">${worked ? 'עבד עליך!' : 'ניסוי הושלם'}</div>
       <div class="sh-status">${ex.title}</div></div></div>
     <p class="sh-deep">${days} מתוך 7 ימים בחרת ב"${SIGNALS.find(s => s.key === ex.signalKey)?.l}". ${worked
@@ -2030,7 +2043,7 @@ function renderExp() {
       <button class="ghost" id="exp-stop">ביטול הניסוי</button></div>`;
   const f = $('#exp-finish');
   if (f) f.onclick = () => finishExperiment();
-  $('#exp-stop').onclick = async () => { if (await confirmSheet('לבטל את הניסוי?', `"${ex.title}" ייעצר בלי פסק דין — אפשר לפתוח ניסוי חדש בכל רגע`, 'ביטול הניסוי', '🧪')) { await api('/api/settings', { experiment: null }); refresh(); } };
+  $('#exp-stop').onclick = async () => { if (await confirmSheet('לבטל את הניסוי?', `"${ex.title}" ייעצר בלי פסק דין — אפשר לפתוח ניסוי חדש בכל רגע`, 'ביטול הניסוי', aimg('clearself', 'shimg'))) { await api('/api/settings', { experiment: null }); refresh(); } };
 }
 
 /* ---- טקסים: בוקר (60 שנ׳) וערב (90 שנ׳) ---- */
@@ -2075,7 +2088,7 @@ function renderRitualStep() {
     for (const s of st.sigs) {
       const b = document.createElement('button');
       b.className = 'sig';
-      b.innerHTML = `<span class="se">${s.e}</span><span class="sl">${s.l}</span>`;
+      b.innerHTML = `${sigIcon(s)}<span class="sl">${s.l}</span>`;
       b.onclick = async () => { await api('/api/signals/toggle', { key: s.key, date: todayISO() }); b.classList.add('on'); b.disabled = true; vibrate(20); };
       g.appendChild(b);
     }
@@ -2139,7 +2152,7 @@ function streakScreen() {
   const sigRuns = SIGNALS.map(s => { const hist = {}; for (const d of sigDates(s.key)) hist[d] = true; return { s, now: sigStreak(s.key), best: longestRun(hist) }; })
     .filter(x => x.best > 0).sort((a, b) => b.now - a.now || b.best - a.best).slice(0, 5);
   openSheet(`
-    <div class="sh-head"><span class="sh-emoji">🔥</span>
+    <div class="sh-head"><span class="sh-emoji">${aimg('innerpower', 'shimg')}</span>
       <div><div class="sh-title">הרצפים שלך</div>
       <div class="sh-status">שיא כל הזמנים: ${Math.max(bestRun(), bestSigRun())} ימים</div></div></div>
     <p class="sh-deep">רצף הוא התגמול המיידי על התנהגות שהפרס האמיתי שלה (שינה טובה) מגיע באיחור. וחשוב מהרצף עצמו: <b>לעולם לא מפספסים פעמיים</b> — יום אחד שנפל לא מוחק כלום, נטישה אחריו כן.</p>
@@ -2188,7 +2201,7 @@ function ladderScreen() {
   const run = top ? top.run : 0;
   const lv = habitLevel(run);
   openSheet(`
-    <div class="sh-head"><span class="sh-emoji">${lv.e}</span>
+    <div class="sh-head"><span class="sh-emoji">${aimg('growth', 'shimg')}</span>
       <div><div class="sh-title">סולם ההרגל</div>
       <div class="sh-status">${top && run > 0 ? `"${top.name}" · שיא ${run} ימים · ${lv.name}` : 'מתחילים מהרגל שקל מאוד ליישם'}</div></div></div>
     <p class="sh-deep">${lv.tip}</p>
