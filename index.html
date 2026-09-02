@@ -211,6 +211,7 @@
   .pill { font: inherit; font-size: 0.85rem; padding: 9px 18px; border-radius: 999px; cursor: pointer; border: none; background: var(--accent-soft); color: var(--accent); font-weight: 650; }
   .pill.solid { background: linear-gradient(135deg, var(--accent-deep), var(--accent)); color: #fff; }
   .pill.done { background: var(--good-soft); color: var(--good); }
+  .pill.danger { background: var(--coral); color: #fff; }
   .ghost { font: inherit; font-size: 0.76rem; background: none; border: none; color: var(--muted); cursor: pointer; padding: 9px 10px; border-radius: 10px; } /* יעד מגע נוח */
   button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .rate { display: none; align-items: center; gap: 6px; flex-wrap: wrap; }
@@ -846,6 +847,21 @@ function askSheet(title, sub, placeholder, def = '') {
   });
 }
 
+/* אישור מעוצב (במקום confirm של הדפדפן): אישור=true, ביטול=false */
+function confirmSheet(title, sub, okLabel = 'אישור', emoji = '🌘') {
+  return new Promise(resolve => {
+    openSheet(`
+      <div class="sh-head"><span class="sh-emoji">${emoji}</span>
+        <div><div class="sh-title">${title}</div><div class="sh-status">${sub}</div></div></div>
+      <div class="row" style="margin-top:14px">
+        <button class="pill danger" id="cf-ok">${okLabel}</button>
+        <button class="ghost" id="cf-cancel">ביטול</button>
+      </div>`);
+    $('#cf-ok').onclick = () => { closeSheet(); resolve(true); };
+    $('#cf-cancel').onclick = () => { closeSheet(); resolve(false); };
+  });
+}
+
 /* כוונת יישום קלילה: בוחרים עוגן בהקשה — המשפט נבנה לבד */
 const TRIGGERS = ['אחרי הקפה של הבוקר', 'אחרי ארוחת הערב', 'כשנגמר הפרק', 'לפני צחצוח השיניים', 'כשאני מגיע הביתה', 'מיד אחרי ההתעוררות', 'כשמתחיל להחשיך', 'אחרי האימון'];
 function intentSheet(habitTitle) {
@@ -1154,7 +1170,7 @@ function renderHabits() {
       refresh();
     };
     row.querySelector('.archive').onclick = async () => {
-      if (confirm(`לשחרר את "${h.name}"? ההיסטוריה נשמרת.`)) { await api('/api/habits/archive', { id: h.id }); refresh(); }
+      if (await confirmSheet(`לשחרר את "${h.name}"?`, 'ההיסטוריה נשמרת — אפשר לאמץ מחדש בכל רגע', 'שחרור ההרגל', '🕊️')) { await api('/api/habits/archive', { id: h.id }); refresh(); }
     };
     box.appendChild(row);
   });
@@ -1474,6 +1490,22 @@ async function commApi(path, body, method) {
   if (!res.ok) throw new Error(j.error || res.status);
   return j;
 }
+/* בדיקת זמינות שרת הקהילה — התוצאה נשמרת לדקה כדי לא להציף בבקשות ובריצודים */
+let COMM_PROBE = null; // { url, ok, at }
+const commBase = () => (COMM?.url || DEFAULT_COMM_URL).replace(/\/$/, '');
+async function commAlive() {
+  const url = commBase();
+  if (COMM_PROBE && COMM_PROBE.url === url && Date.now() - COMM_PROBE.at < 60000) return COMM_PROBE.ok;
+  let ok = false;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 3500);
+    const res = await fetch(url + '/api/ideas-stats', { signal: ctrl.signal });
+    clearTimeout(t); ok = res.ok;
+  } catch { ok = false; }
+  COMM_PROBE = { url, ok, at: Date.now() };
+  return ok;
+}
 async function commSync() {
   if (!COMM?.token) return;
   try {
@@ -1572,29 +1604,50 @@ function renderMentorPath() {
 function renderCommunity() {
   const box = $('#comm');
   if (!COMM?.token) {
-    box.innerHTML = `<div class="addidea">
-      <input id="cm-name" placeholder="השם שיוצג לקהילה" maxlength="40">
-      <div class="row"><button class="pill solid" id="cm-join">הצטרפות לקהילה</button>
-      <button class="ghost" id="cm-url">⚙ שרת</button><span class="err" id="cm-err"></span></div>
-      <p class="sub" style="margin:4px 0 0">ההצטרפות משתפת רק: שם, ציוני עמודים ודירוגי רעיונות. שום נתון גולמי לא עוזב את המכשיר.</p></div>`;
-    $('#cm-join').onclick = async () => {
-      const name = $('#cm-name').value.trim();
-      if (!name) return;
-      try {
-        const base = COMM?.url || DEFAULT_COMM_URL;
-        const res = await fetch(base + '/api/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
-        const j = await res.json();
-        if (!res.ok) throw new Error(j.error || res.status);
-        COMM = { url: base, token: j.token, name };
-        localStorage.setItem('community', JSON.stringify(COMM));
-        toast('🌍 ברוכים הבאים לקהילה!'); confetti();
-        await commSync(); renderCommunity(); renderIdeas();
-      } catch (e) { $('#cm-err').textContent = 'החיבור נכשל — ' + e.message; }
+    const editUrl = async () => {
+      const u = await askSheet('שרת הקהילה', 'כתובת השרת שקיבלת מהמארח (כולל https://)', 'https://…', COMM?.url || DEFAULT_COMM_URL);
+      if (u) { COMM = { ...(COMM || {}), url: u.replace(/\/$/, '') }; localStorage.setItem('community', JSON.stringify(COMM)); COMM_PROBE = null; renderCommunity(); }
     };
-    $('#cm-url').onclick = () => {
-      const u = prompt('כתובת שרת הקהילה:', COMM?.url || DEFAULT_COMM_URL);
-      if (u) { COMM = { ...(COMM || {}), url: u.trim().replace(/\/$/, '') }; localStorage.setItem('community', JSON.stringify(COMM)); renderCommunity(); }
+    const renderOffline = () => {
+      box.innerHTML = `<div style="text-align:center;padding:8px 6px">
+        <div style="font-size:2rem" aria-hidden="true">🌫️</div>
+        <div style="font-weight:750;margin:6px 0 2px">הקהילה לא זמינה כרגע</div>
+        <p class="sub" style="margin:0 0 12px">הכול אצלך ממשיך לעבוד — הנתונים שלך שמורים במכשיר, וננסה להתחבר שוב מאוחר יותר.</p>
+        <div class="row" style="justify-content:center">
+          <button class="pill solid" id="cm-retry">נסה שוב</button>
+          <button class="ghost" id="cm-url">⚙ שרת</button>
+        </div></div>`;
+      $('#cm-retry').onclick = () => { COMM_PROBE = null; renderCommunity(); };
+      $('#cm-url').onclick = editUrl;
     };
+    const renderJoin = () => {
+      box.innerHTML = `<div class="addidea">
+        <input id="cm-name" placeholder="השם שיוצג לקהילה" maxlength="40">
+        <div class="row"><button class="pill solid" id="cm-join">הצטרפות לקהילה</button>
+        <button class="ghost" id="cm-url">⚙ שרת</button><span class="err" id="cm-err"></span></div>
+        <p class="sub" style="margin:4px 0 0">ההצטרפות משתפת רק: שם, ציוני עמודים ודירוגי רעיונות. שום נתון גולמי לא עוזב את המכשיר.</p></div>`;
+      $('#cm-join').onclick = async () => {
+        const name = $('#cm-name').value.trim();
+        if (!name) return;
+        try {
+          const base = COMM?.url || DEFAULT_COMM_URL;
+          const res = await fetch(base + '/api/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+          const j = await res.json();
+          if (!res.ok) throw new Error(j.error || res.status);
+          COMM = { url: base, token: j.token, name };
+          localStorage.setItem('community', JSON.stringify(COMM));
+          toast('🌍 ברוכים הבאים לקהילה!'); confetti();
+          await commSync(); renderCommunity(); renderIdeas();
+        } catch (e) { $('#cm-err').textContent = 'החיבור נכשל — ' + e.message; }
+      };
+      $('#cm-url').onclick = editUrl;
+    };
+    const fresh = COMM_PROBE && COMM_PROBE.url === commBase() && Date.now() - COMM_PROBE.at < 60000;
+    if (fresh) { COMM_PROBE.ok ? renderJoin() : renderOffline(); }
+    else {
+      box.innerHTML = '<p class="sub" style="margin:0">🌙 בודק חיבור לקהילה…</p>';
+      commAlive().then(ok => { if (COMM?.token) return; ok ? renderJoin() : renderOffline(); });
+    }
     return;
   }
   box.innerHTML = `<p class="sub" style="margin:0 0 10px">מחובר כ-<b>${COMM.name}</b> · הציונים שלך מסתנכרנים, ודירוגי הרעיונות מצטרפים לידע המשותף 🌍</p>
@@ -1681,6 +1734,7 @@ function renderStudies() {
       showView('library');
       const d = document.querySelector(`details.idea[data-idea="${top[0].t.ideaId}"]`);
       if (d) { d.open = true; setTimeout(() => d.scrollIntoView({ block: 'center' }), 60); }
+      else toast('הרעיון הוסתר בעבר — הספרייה פתוחה לבחירה');
     };
     profBox.querySelector('#prof-sig').onclick = () => {
       showView('today');
@@ -1976,7 +2030,7 @@ function renderExp() {
       <button class="ghost" id="exp-stop">ביטול הניסוי</button></div>`;
   const f = $('#exp-finish');
   if (f) f.onclick = () => finishExperiment();
-  $('#exp-stop').onclick = async () => { if (confirm('לבטל את הניסוי?')) { await api('/api/settings', { experiment: null }); refresh(); } };
+  $('#exp-stop').onclick = async () => { if (await confirmSheet('לבטל את הניסוי?', `"${ex.title}" ייעצר בלי פסק דין — אפשר לפתוח ניסוי חדש בכל רגע`, 'ביטול הניסוי', '🧪')) { await api('/api/settings', { experiment: null }); refresh(); } };
 }
 
 /* ---- טקסים: בוקר (60 שנ׳) וערב (90 שנ׳) ---- */
@@ -2051,7 +2105,7 @@ $('#r-next').onclick = async () => {
   if (R_I >= R_STEPS.length) { $('#ritual').hidden = true; stopRitualAudio(); refresh(); }
   else renderRitualStep();
 };
-$('#r-skip').onclick = () => { clearTimeout(breathTimer); stopRitualAudio(); $('#ritual').hidden = true; };
+$('#r-skip').onclick = () => { clearTimeout(breathTimer); stopRitualAudio(); $('#ritual').hidden = true; refresh(); };
 
 /* כל כרטיס מתרנדר בתא מבודד — תקלה באחד לא מפילה את השאר ולא את המסך */
 function renderAll() {
